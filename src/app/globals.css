@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --olive-deep: #555a43;
+  --olive: #6f7458;
+  --sand: #d9c9b4;
+  --stone: #c9bba6;
+  --cream: #ede4d8;
+  --espresso: #2e2a26;
+  --bronze: #a3835b;
+}
+
+@theme inline {
+  --color-olive-deep: var(--olive-deep);
+  --color-olive: var(--olive);
+  --color-sand: var(--sand);
+  --color-stone: var(--stone);
+  --color-cream: var(--cream);
+  --color-espresso: var(--espresso);
+  --color-bronze: var(--bronze);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
+}
+
+body {
+  background: var(--cream);
+  color: var(--espresso);
+}

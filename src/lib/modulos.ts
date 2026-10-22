@@ -1,0 +1,16 @@
+export const MODULOS = [
+  { slug: "", modulo: "inicio", nombre: "Inicio" },
+  { slug: "leads", modulo: "leads", nombre: "Leads" },
+  { slug: "propuestas", modulo: "propuestas", nombre: "Propuestas" },
+  { slug: "eventos", modulo: "eventos", nombre: "Eventos" },
+  { slug: "clientes", modulo: "clientes", nombre: "Clientes" },
+  { slug: "proveedores", modulo: "proveedores", nombre: "Proveedores" },
+  { slug: "formatos", modulo: "formatos", nombre: "Formatos propios" },
+  { slug: "calendario", modulo: "calendario", nombre: "Calendario" },
+  { slug: "roadmap", modulo: "roadmap", nombre: "Roadmap" },
+  { slug: "tareas", modulo: "tareas", nombre: "Tareas" },
+  { slug: "documentos", modulo: "documentos", nombre: "Documentos" },
+  { slug: "finanzas", modulo: "finanzas", nombre: "Finanzas" },
+  { slug: "reporting", modulo: "reporting", nombre: "Reporting" },
+  { slug: "configuracion", modulo: "configuracion", nombre: "Configuración" },
+] as const;

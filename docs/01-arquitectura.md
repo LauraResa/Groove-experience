@@ -98,7 +98,7 @@ La seguridad real está en **RLS**. La interfaz solo oculta botones; aunque algu
 
 ## 4. Modelo de datos
 
-Esquema completo en [`02-modelo-datos.sql`](02-modelo-datos.sql). Resumen:
+Esquema completo en [`supabase/migrations/`](../supabase/migrations). Resumen:
 
 ### 4.1 Núcleo de usuarios y permisos
 

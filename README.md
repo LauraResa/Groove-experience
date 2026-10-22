@@ -2,7 +2,7 @@
 
 Centro de gestión comercial, operativa y estratégica de THE GROOVE EXPERIENCE.
 
-**Estado:** Fase 1, arquitectura pendiente de aprobación. Todavía no hay código de aplicación.
+**Estado:** MVP en desarrollo. Base de datos desplegada en Supabase; app con login, inicio y leads (kanban).
 
 ## Stack previsto
 
@@ -19,4 +19,19 @@ Centro de gestión comercial, operativa y estratégica de THE GROOVE EXPERIENCE.
 ## Documentación
 
 - [`docs/01-arquitectura.md`](docs/01-arquitectura.md): arquitectura, módulos, permisos, navegación, flujo, MVP y decisiones abiertas.
-- [`docs/02-modelo-datos.sql`](docs/02-modelo-datos.sql): borrador del esquema Postgres/Supabase (tablas, relaciones, RLS). Todavía no se ha aplicado.
+- [`supabase/migrations/`](supabase/migrations): esquema aplicado en Supabase (tablas, RLS, triggers, semillas).
+
+## Desarrollo local
+
+```bash
+npm install
+npm run dev   # http://localhost:3000
+```
+
+Variables opcionales (por defecto apunta al proyecto Supabase Groove-experience): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+
+## Alta de usuarios
+
+1. Supabase → Authentication → Users → Add user (email + contraseña, Auto Confirm).
+2. Asignar rol: `insert into usuarios_previstos (email, nombre, rol_clave) values ('…', 'Laura', 'admin_tge');`
+   Roles: `admin_tge`, `direccion`, `comunicacion`.

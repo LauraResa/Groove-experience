@@ -1,10 +1,9 @@
 -- =====================================================================
--- THE GROOVE EXPERIENCE · Modelo de datos (BORRADOR FASE 1)
--- Postgres / Supabase. NO aplicado todavía.
--- Tras aprobación se moverá a supabase/migrations/.
+-- THE GROOVE EXPERIENCE · Modelo de datos inicial
+-- Postgres / Supabase.
 -- =====================================================================
 
-create extension if not exists pg_trgm;
+create extension if not exists pg_trgm with schema extensions;
 
 -- ---------------------------------------------------------------------
 -- ENUMS
@@ -47,13 +46,13 @@ create table perfiles (
   nombre      text not null,
   email       text not null,
   avatar_url  text,
-  rol_id      uuid not null references roles,
+  rol_id      uuid references roles,         -- null = sin acceso
   activo      boolean not null default true,
   creado_en   timestamptz not null default now()
 );
 
 create or replace function tiene_permiso(p_modulo text, p_accion text)
-returns boolean language sql stable security definer set search_path = public as $$
+returns boolean language sql stable security definer set search_path = public, pg_temp as $$
   select exists (
     select 1 from perfiles pf
     join permisos pm on pm.rol_id = pf.rol_id
@@ -127,7 +126,7 @@ create table clientes (
   creado_por   uuid references perfiles default auth.uid(),
   creado_en    timestamptz not null default now()
 );
-create index on clientes using gin (nombre gin_trgm_ops);
+create index on clientes using gin (nombre extensions.gin_trgm_ops);
 
 create table contactos (
   id          uuid primary key default gen_random_uuid(),
@@ -277,7 +276,7 @@ create table propuesta_lineas (
   orden            int not null default 0
 );
 
-create view propuesta_totales as
+create view propuesta_totales with (security_invoker = on) as
 select p.id as propuesta_id,
        sum(l.cantidad * l.precio_unitario)                               as subtotal,
        sum(l.cantidad * l.precio_unitario) * (1 - p.descuento_pct / 100) as total,
@@ -419,7 +418,7 @@ create table cobros (
 );
 
 -- Variable estimado: fórmula provisional, pendiente de decisión §13.3
-create view evento_finanzas_resumen as
+create view evento_finanzas_resumen with (security_invoker = on) as
 select f.*,
        coalesce((select sum(importe) from cobros c where c.evento_id = f.evento_id and c.cobrado), 0) as cobrado,
        f.facturacion + f.extras
@@ -534,7 +533,7 @@ create table notificaciones (
 -- ---------------------------------------------------------------------
 -- VISTA CALENDARIO UNIFICADO
 -- ---------------------------------------------------------------------
-create view calendario as
+create view calendario with (security_invoker = on) as
   select 'evento'::text as capa, e.id, e.nombre as titulo,
          coalesce(e.montaje_inicio, e.fecha::timestamptz) as inicio,
          coalesce(e.desmontaje_fin, e.fecha::timestamptz + interval '1 day') as fin,
@@ -560,7 +559,7 @@ union all
 -- ---------------------------------------------------------------------
 -- REGLA DE APROBACIÓN (trigger sobre propuestas)
 -- ---------------------------------------------------------------------
-create or replace function calcular_aprobacion() returns trigger language plpgsql as $$
+create or replace function calcular_aprobacion() returns trigger language plpgsql set search_path = public, pg_temp as $$
 declare
   v_desc_max numeric; v_margen_min numeric; v_imp_max numeric;
   v_total numeric; v_coste numeric; v_motivos text[] := '{}';
@@ -571,14 +570,14 @@ begin
   select total, coste into v_total, v_coste from propuesta_totales where propuesta_id = new.id;
 
   if v_desc_max is not null and new.descuento_pct > v_desc_max then
-    v_motivos := v_motivos || 'Descuento superior al estándar'; end if;
+    v_motivos := array_append(v_motivos, 'Descuento superior al estándar'::text); end if;
   if v_margen_min is not null and coalesce(v_total,0) > 0
      and (v_total - v_coste) / v_total * 100 < v_margen_min then
-    v_motivos := v_motivos || 'Margen inferior al mínimo'; end if;
+    v_motivos := array_append(v_motivos, 'Margen inferior al mínimo'::text); end if;
   if v_imp_max is not null and coalesce(v_total,0) > v_imp_max then
-    v_motivos := v_motivos || 'Importe superior al límite'; end if;
+    v_motivos := array_append(v_motivos, 'Importe superior al límite'::text); end if;
   if exists (select 1 from propuesta_lineas where propuesta_id = new.id and catalogo_item_id is null and proveedor_id is not null) then
-    v_motivos := v_motivos || 'Proveedor o servicio fuera de catálogo'; end if;
+    v_motivos := array_append(v_motivos, 'Proveedor o servicio fuera de catálogo'::text); end if;
 
   new.motivos_aprobacion  := v_motivos;
   new.requiere_aprobacion := cardinality(v_motivos) > 0;
@@ -587,33 +586,166 @@ end $$;
 
 create trigger propuestas_aprobacion before insert or update on propuestas
 for each row execute function calcular_aprobacion();
--- (fase 2: trigger en propuesta_lineas que haga touch de la propuesta padre)
+
+create or replace function tocar_propuesta() returns trigger language plpgsql set search_path = public, pg_temp as $$
+begin
+  update propuestas set id = id where id = coalesce(new.propuesta_id, old.propuesta_id);
+  return null;
+end $$;
+create trigger propuesta_lineas_recalculo after insert or update or delete on propuesta_lineas
+for each row execute function tocar_propuesta();
 
 -- ---------------------------------------------------------------------
--- RLS (patrón; se replica por tabla en la migración real)
+-- ALTA DE USUARIOS: email → rol (solo emails previstos obtienen acceso)
 -- ---------------------------------------------------------------------
-alter table leads enable row level security;
-create policy leads_select on leads for select using (tiene_permiso('leads','ver'));
-create policy leads_insert on leads for insert with check (tiene_permiso('leads','crear'));
-create policy leads_update on leads for update using (tiene_permiso('leads','editar'));
-create policy leads_delete on leads for delete using (tiene_permiso('leads','borrar'));
-
-alter table evento_finanzas enable row level security;
-create policy fin_select on evento_finanzas for select using (tiene_permiso('finanzas','ver_importes'));
-create policy fin_write  on evento_finanzas for all    using (tiene_permiso('finanzas','editar'));
-
-alter table aprobaciones enable row level security;
-create policy aprob_select on aprobaciones for select using (tiene_permiso('aprobaciones','ver'));
-create policy aprob_insert on aprobaciones for insert with check (tiene_permiso('aprobaciones','crear'));
-create policy aprob_decide on aprobaciones for update using (tiene_permiso('aprobaciones','aprobar'));
-
-alter table tareas enable row level security;
-create policy tareas_select on tareas for select using (tiene_permiso('tareas','ver'));
-create policy tareas_write  on tareas for all using (
-  tiene_permiso('tareas','editar')
-  or (tiene_permiso('tareas','solo_propias') and (responsable_id = auth.uid() or creado_por = auth.uid()))
+create table usuarios_previstos (
+  email     text primary key,
+  nombre    text not null,
+  rol_clave text not null references roles (clave)
 );
 
+create or replace function crear_perfil() returns trigger
+language plpgsql security definer set search_path = public, pg_temp as $$
+declare v_prev usuarios_previstos;
+begin
+  select * into v_prev from usuarios_previstos where lower(email) = lower(new.email);
+  insert into perfiles (id, nombre, email, rol_id)
+  values (new.id, coalesce(v_prev.nombre, split_part(new.email, '@', 1)), new.email,
+          (select id from roles where clave = v_prev.rol_clave))
+  on conflict (id) do nothing;
+  return new;
+end $$;
+create trigger on_auth_user_created after insert on auth.users
+for each row execute function crear_perfil();
+
+-- si el email se añade después de que el usuario haya entrado
+create or replace function sincronizar_previsto() returns trigger
+language plpgsql security definer set search_path = public, pg_temp as $$
+begin
+  update perfiles set nombre = new.nombre, rol_id = (select id from roles where clave = new.rol_clave)
+  where lower(email) = lower(new.email);
+  return new;
+end $$;
+create trigger usuarios_previstos_sync after insert or update on usuarios_previstos
+for each row execute function sincronizar_previsto();
+
+-- ---------------------------------------------------------------------
+-- ACTIVITY LOG + actualizado_en
+-- ---------------------------------------------------------------------
+create or replace function registrar_actividad() returns trigger
+language plpgsql security definer set search_path = public, pg_temp as $$
+begin
+  insert into actividad_log (entidad_tipo, entidad_id, accion, cambios)
+  values (tg_argv[0]::entidad, coalesce(new.id, old.id), lower(tg_op),
+          case when tg_op = 'UPDATE' then jsonb_build_object('antes', to_jsonb(old), 'despues', to_jsonb(new))
+               else to_jsonb(coalesce(new, old)) end);
+  return null;
+end $$;
+
+do $$
+declare r record;
+begin
+  for r in select * from (values
+    ('solicitudes','solicitud'),('leads','lead'),('clientes','cliente'),('propuestas','propuesta'),
+    ('eventos','evento'),('proveedores','proveedor'),('formatos','formato'),('roadmap_items','roadmap'),
+    ('tareas','tarea')) t(tabla, ent)
+  loop
+    execute format('create trigger %I_log after insert or update or delete on %I
+                    for each row execute function registrar_actividad(%L)', r.tabla, r.tabla, r.ent);
+  end loop;
+end $$;
+
+create or replace function tocar_actualizado() returns trigger language plpgsql set search_path = public, pg_temp as $$
+begin new.actualizado_en := now(); return new; end $$;
+create trigger leads_actualizado before update on leads for each row execute function tocar_actualizado();
+
+-- ---------------------------------------------------------------------
+-- RLS
+-- Tablas de negocio: ver/crear/editar/borrar según permisos(rol, modulo, accion)
+-- ---------------------------------------------------------------------
+do $$
+declare r record;
+begin
+  for r in select * from (values
+    ('clientes','clientes'),('contactos','clientes'),
+    ('leads','leads'),('lead_espacios','leads'),('actividades','leads'),
+    ('solicitudes','solicitudes'),
+    ('proveedores','proveedores'),
+    ('propuestas','propuestas'),('propuesta_espacios','propuestas'),('propuesta_lineas','propuestas'),
+    ('formatos','formatos'),
+    ('eventos','eventos'),('evento_espacios','eventos'),('evento_timeline','eventos'),('incidencias','eventos'),
+    ('contenidos','contenidos'),
+    ('evento_finanzas','finanzas'),('cobros','finanzas'),
+    ('calendario_bloques','calendario'),
+    ('roadmap_items','roadmap'),
+    ('documentos','documentos'),('documento_vinculos','documentos'),
+    ('campanas','leads')) t(tabla, modulo)
+  loop
+    execute format('alter table %I enable row level security', r.tabla);
+    execute format('create policy %I on %I for select to authenticated using (tiene_permiso(%L,''ver''))', r.tabla||'_sel', r.tabla, r.modulo);
+    execute format('create policy %I on %I for insert to authenticated with check (tiene_permiso(%L,''crear''))', r.tabla||'_ins', r.tabla, r.modulo);
+    execute format('create policy %I on %I for update to authenticated using (tiene_permiso(%L,''editar''))', r.tabla||'_upd', r.tabla, r.modulo);
+    execute format('create policy %I on %I for delete to authenticated using (tiene_permiso(%L,''borrar''))', r.tabla||'_del', r.tabla, r.modulo);
+  end loop;
+end $$;
+
+-- Importes: catálogo y proveedores de evento solo con ver_importes
+alter table catalogo_items enable row level security;
+create policy catalogo_sel on catalogo_items for select to authenticated using (tiene_permiso('proveedores','ver_importes'));
+create policy catalogo_all on catalogo_items for all    to authenticated using (tiene_permiso('proveedores','editar')) with check (tiene_permiso('proveedores','editar'));
+
+alter table evento_proveedores enable row level security;
+create policy evprov_sel on evento_proveedores for select to authenticated using (tiene_permiso('eventos','ver_importes'));
+create policy evprov_all on evento_proveedores for all    to authenticated using (tiene_permiso('eventos','editar')) with check (tiene_permiso('eventos','editar'));
+
+-- Configuración: lectura para cualquier usuario con rol, escritura solo admin
+do $$
+declare t text;
+begin
+  foreach t in array array['roles','permisos','categorias','categorias_proveedor','espacios','estados_lead','condiciones_estandar','usuarios_previstos']
+  loop
+    execute format('alter table %I enable row level security', t);
+    execute format('create policy %I on %I for select to authenticated using (tiene_permiso(''inicio'',''ver''))', t||'_sel', t);
+    execute format('create policy %I on %I for all to authenticated using (tiene_permiso(''configuracion'',''editar'')) with check (tiene_permiso(''configuracion'',''editar''))', t||'_adm', t);
+  end loop;
+end $$;
+
+alter table perfiles enable row level security;
+create policy perfiles_sel on perfiles for select to authenticated using (id = auth.uid() or tiene_permiso('inicio','ver'));
+create policy perfiles_adm on perfiles for update to authenticated using (tiene_permiso('configuracion','editar'));
+
+-- Aprobaciones
+alter table aprobaciones enable row level security;
+create policy aprob_sel on aprobaciones for select to authenticated using (tiene_permiso('aprobaciones','ver'));
+create policy aprob_ins on aprobaciones for insert to authenticated with check (tiene_permiso('aprobaciones','crear'));
+create policy aprob_upd on aprobaciones for update to authenticated using (tiene_permiso('aprobaciones','aprobar'));
+
+-- Tareas: editar todo o solo propias
+alter table tareas enable row level security;
+create policy tareas_sel on tareas for select to authenticated using (tiene_permiso('tareas','ver'));
+create policy tareas_ins on tareas for insert to authenticated with check (tiene_permiso('tareas','crear'));
+create policy tareas_upd on tareas for update to authenticated using (
+  tiene_permiso('tareas','editar')
+  or (tiene_permiso('tareas','solo_propias') and (responsable_id = auth.uid() or creado_por = auth.uid())));
+create policy tareas_del on tareas for delete to authenticated using (tiene_permiso('tareas','borrar'));
+
+-- Comentarios: cualquier usuario con rol comenta; cada uno edita lo suyo
+alter table comentarios enable row level security;
+create policy com_sel on comentarios for select to authenticated using (tiene_permiso('inicio','ver'));
+create policy com_ins on comentarios for insert to authenticated with check (tiene_permiso('inicio','ver') and autor_id = auth.uid());
+create policy com_upd on comentarios for update to authenticated using (autor_id = auth.uid());
+create policy com_del on comentarios for delete to authenticated using (autor_id = auth.uid());
+
+-- Log: solo lectura (lo escriben triggers)
+alter table actividad_log enable row level security;
+create policy log_sel on actividad_log for select to authenticated using (tiene_permiso('inicio','ver'));
+
+-- Notificaciones: cada uno las suyas
+alter table notificaciones enable row level security;
+create policy notif_sel on notificaciones for select to authenticated using (usuario_id = auth.uid());
+create policy notif_upd on notificaciones for update to authenticated using (usuario_id = auth.uid());
+
+revoke execute on function crear_perfil(), sincronizar_previsto(), registrar_actividad() from public, anon, authenticated;
 -- ---------------------------------------------------------------------
 -- SEMILLAS
 -- ---------------------------------------------------------------------
@@ -659,3 +791,60 @@ insert into formatos (nombre, descripcion) values
 insert into formatos (nombre, padre_id, descripcion)
   select 'Family Edition Navidad', id, 'Experiencia familiar de día: ciudad navideña, Papá Noel / Reyes, talleres, brunch.'
   from formatos where nombre = 'Social Club';
+
+-- ---------------------------------------------------------------------
+-- MATRIZ DE PERMISOS (docs/01-arquitectura.md §6.2)
+-- ---------------------------------------------------------------------
+insert into permisos (rol_id, modulo, accion)
+select r.id, m.modulo, m.accion
+from roles r
+join (values
+  -- admin_tge: todo
+  ('admin_tge','inicio','ver'),('admin_tge','inicio','ver_importes'),
+  ('admin_tge','solicitudes','ver'),('admin_tge','solicitudes','crear'),('admin_tge','solicitudes','editar'),('admin_tge','solicitudes','borrar'),
+  ('admin_tge','leads','ver'),('admin_tge','leads','crear'),('admin_tge','leads','editar'),('admin_tge','leads','borrar'),('admin_tge','leads','ver_importes'),
+  ('admin_tge','propuestas','ver'),('admin_tge','propuestas','crear'),('admin_tge','propuestas','editar'),('admin_tge','propuestas','borrar'),('admin_tge','propuestas','ver_importes'),
+  ('admin_tge','aprobaciones','ver'),('admin_tge','aprobaciones','crear'),
+  ('admin_tge','eventos','ver'),('admin_tge','eventos','crear'),('admin_tge','eventos','editar'),('admin_tge','eventos','borrar'),('admin_tge','eventos','ver_importes'),
+  ('admin_tge','contenidos','ver'),('admin_tge','contenidos','crear'),('admin_tge','contenidos','editar'),('admin_tge','contenidos','borrar'),
+  ('admin_tge','clientes','ver'),('admin_tge','clientes','crear'),('admin_tge','clientes','editar'),('admin_tge','clientes','borrar'),('admin_tge','clientes','ver_importes'),
+  ('admin_tge','proveedores','ver'),('admin_tge','proveedores','crear'),('admin_tge','proveedores','editar'),('admin_tge','proveedores','borrar'),('admin_tge','proveedores','ver_importes'),
+  ('admin_tge','formatos','ver'),('admin_tge','formatos','crear'),('admin_tge','formatos','editar'),('admin_tge','formatos','borrar'),('admin_tge','formatos','ver_importes'),
+  ('admin_tge','calendario','ver'),('admin_tge','calendario','crear'),('admin_tge','calendario','editar'),('admin_tge','calendario','borrar'),
+  ('admin_tge','roadmap','ver'),('admin_tge','roadmap','crear'),('admin_tge','roadmap','editar'),('admin_tge','roadmap','borrar'),
+  ('admin_tge','tareas','ver'),('admin_tge','tareas','crear'),('admin_tge','tareas','editar'),('admin_tge','tareas','borrar'),
+  ('admin_tge','documentos','ver'),('admin_tge','documentos','crear'),('admin_tge','documentos','editar'),('admin_tge','documentos','borrar'),
+  ('admin_tge','finanzas','ver'),('admin_tge','finanzas','crear'),('admin_tge','finanzas','editar'),('admin_tge','finanzas','ver_importes'),
+  ('admin_tge','reporting','ver'),
+  ('admin_tge','configuracion','ver'),('admin_tge','configuracion','editar'),
+  -- direccion: ve todo, comenta, aprueba
+  ('direccion','inicio','ver'),('direccion','inicio','ver_importes'),
+  ('direccion','solicitudes','ver'),('direccion','solicitudes','crear'),
+  ('direccion','leads','ver'),('direccion','leads','ver_importes'),
+  ('direccion','propuestas','ver'),('direccion','propuestas','ver_importes'),
+  ('direccion','aprobaciones','ver'),('direccion','aprobaciones','aprobar'),
+  ('direccion','eventos','ver'),('direccion','eventos','ver_importes'),
+  ('direccion','contenidos','ver'),
+  ('direccion','clientes','ver'),('direccion','clientes','ver_importes'),
+  ('direccion','proveedores','ver'),('direccion','proveedores','ver_importes'),
+  ('direccion','formatos','ver'),('direccion','formatos','ver_importes'),
+  ('direccion','calendario','ver'),('direccion','roadmap','ver'),
+  ('direccion','tareas','ver'),('direccion','tareas','crear'),('direccion','tareas','solo_propias'),
+  ('direccion','documentos','ver'),
+  ('direccion','finanzas','ver'),('direccion','finanzas','ver_importes'),
+  ('direccion','reporting','ver'),
+  -- comunicacion: eventos, calendario, formatos, contenidos, documentos; sin importes
+  ('comunicacion','inicio','ver'),
+  ('comunicacion','solicitudes','ver'),('comunicacion','solicitudes','crear'),
+  ('comunicacion','eventos','ver'),
+  ('comunicacion','contenidos','ver'),('comunicacion','contenidos','crear'),('comunicacion','contenidos','editar'),
+  ('comunicacion','proveedores','ver'),
+  ('comunicacion','formatos','ver'),
+  ('comunicacion','calendario','ver'),('comunicacion','roadmap','ver'),
+  ('comunicacion','tareas','ver'),('comunicacion','tareas','crear'),('comunicacion','tareas','solo_propias'),
+  ('comunicacion','documentos','ver'),('comunicacion','documentos','crear'),('comunicacion','documentos','editar')
+) as m(rol, modulo, accion) on m.rol = r.clave;
+
+insert into condiciones_estandar (regla, valor) values
+  ('descuento_max_pct', 10),   -- PROVISIONAL, ajustar en Configuración
+  ('margen_min_pct', 30);      -- PROVISIONAL
