@@ -9,6 +9,9 @@ export default async function Inicio() {
   const supabase = await createClient();
   const verImportes = puede(s, "inicio", "ver_importes");
   const hoy = new Date().toISOString().slice(0, 10);
+  const hora = Number(new Date().toLocaleString("es-ES", { hour: "numeric", hour12: false, timeZone: "Europe/Madrid" }));
+  const saludo = hora < 14 ? "Buenos días" : hora < 21 ? "Buenas tardes" : "Buenas noches";
+  const fechaLarga = new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Madrid" });
   const hace30 = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
 
   const [{ data: leads }, { data: eventos }, { data: tareas }, { data: aprob }] = await Promise.all([
@@ -38,21 +41,23 @@ export default async function Inicio() {
 
   return (
     <div className="space-y-8 max-w-6xl">
-      <header>
-        <p className="text-sm text-espresso/60">Hola, {s.nombre.split(" ")[0]}</p>
-        <h1 className="font-serif text-3xl">Inicio</h1>
+      <header className="aparecer space-y-2">
+        <p className="antetitulo">{fechaLarga}</p>
+        <h1 className="font-serif text-4xl md:text-5xl leading-tight">
+          {saludo}, <em className="text-olive">{s.nombre.split(" ")[0]}</em>
+        </h1>
       </header>
 
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {kpis.map((k) => (
-          <div key={k.label} className="rounded-xl bg-sand/60 border border-stone p-4">
-            <p className="text-xs uppercase tracking-wide text-espresso/60">{k.label}</p>
-            <p className={`mt-1 text-2xl font-serif ${k.acento ? "text-bronze" : ""}`}>{k.valor}</p>
+        {kpis.map((k, i) => (
+          <div key={k.label} className="tarjeta tarjeta-viva aparecer p-4 md:p-5" style={{ animationDelay: `${80 + i * 60}ms` }}>
+            <p className="text-[11px] uppercase tracking-[0.14em] text-espresso/55">{k.label}</p>
+            <p className={`mt-2 text-2xl md:text-3xl font-serif ${k.acento ? "text-bronze" : ""}`}>{k.valor}</p>
           </div>
         ))}
       </section>
 
-      <section className="grid md:grid-cols-2 gap-4">
+      <section className="grid md:grid-cols-2 gap-4 aparecer" style={{ animationDelay: "500ms" }}>
         {puede(s, "eventos") && (
           <Panel titulo="Próximos eventos" href="/eventos">
             {eventos?.length ? eventos.map((e) => (
@@ -74,14 +79,14 @@ export default async function Inicio() {
 
 function Panel({ titulo, href, children }: { titulo: string; href: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl bg-sand/40 border border-stone p-5">
-      <div className="flex justify-between items-baseline mb-3">
-        <h2 className="font-serif text-lg">{titulo}</h2>
-        <Link href={href} className="text-xs text-olive hover:underline">Ver todo</Link>
+    <div className="tarjeta p-5 md:p-6">
+      <div className="flex justify-between items-baseline mb-4 pb-3 border-b border-stone/60">
+        <h2 className="font-serif text-xl">{titulo}</h2>
+        <Link href={href} className="text-xs text-olive hover:text-bronze transition">Ver todo →</Link>
       </div>
       <ul className="space-y-2 text-sm">{children}</ul>
     </div>
   );
 }
 
-const Vacio = () => <li className="text-espresso/50">Sin elementos todavía</li>;
+const Vacio = () => <li className="text-espresso/45 italic font-serif">Nada por aquí todavía</li>;

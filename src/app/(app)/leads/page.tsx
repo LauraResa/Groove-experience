@@ -32,10 +32,11 @@ export default async function Leads() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap gap-3 justify-between items-end">
+      <header className="aparecer flex flex-wrap gap-3 justify-between items-end">
         <div>
-          <h1 className="font-serif text-3xl">Leads</h1>
-          <p className="text-sm text-espresso/60">{leads?.length ?? 0} oportunidades</p>
+          <p className="antetitulo">CRM · Pipeline</p>
+          <h1 className="font-serif text-4xl mt-1">Leads</h1>
+          <p className="text-sm text-espresso/60 mt-1">{leads?.length ?? 0} oportunidades</p>
         </div>
         {puede(s, "leads", "crear") && (
           <NuevoLead estados={estados ?? []} categorias={categorias ?? []} campanas={campanas ?? []} responsables={responsables} />
@@ -47,7 +48,7 @@ export default async function Leads() {
           const col = (leads ?? []).filter((l) => l.estado_id === e.id);
           const total = col.reduce((t, l) => t + Number(l.presupuesto_estimado ?? 0), 0);
           return (
-            <section key={e.id} className="w-72 shrink-0 rounded-xl bg-stone/30 p-3 space-y-2">
+            <section key={e.id} className="aparecer w-72 shrink-0 rounded-2xl bg-stone/25 border border-stone/40 p-3 space-y-2" style={{ animationDelay: `${(e.orden ?? 0) * 40}ms` }}>
               <div className="flex justify-between text-xs font-medium px-1">
                 <span>{e.nombre}</span>
                 <span className="text-espresso/60">{col.length}{importes && total > 0 ? ` · ${eur(total)}` : ""}</span>
@@ -56,7 +57,7 @@ export default async function Leads() {
                 const cliente = l.clientes as unknown as { nombre: string } | null;
                 const resp = l.perfiles as unknown as { nombre: string } | null;
                 return (
-                  <article key={l.id} className="rounded-lg bg-cream border border-stone p-3 space-y-1.5 text-sm">
+                  <article key={l.id} className="tarjeta tarjeta-viva p-3 space-y-1.5 text-sm">
                     <div className="flex justify-between gap-2">
                       <span className="text-[10px] text-espresso/50">{l.codigo}</span>
                       <span className={`text-[10px] rounded-full px-2 ${PRIORIDAD[l.prioridad]}`}>{l.prioridad}</span>
