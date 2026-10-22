@@ -5,7 +5,7 @@ import { cambiarPasswordDe, crearUsuario } from "./actions";
 
 const campo = "w-full rounded-lg border border-stone bg-cream/80 px-3 py-2 text-sm outline-none focus:border-olive";
 
-export function NuevoUsuario({ roles }: { roles: { id: string; clave: string; nombre: string }[] }) {
+export function NuevoUsuario({ roles }: { roles: { id: string; clave: string; nombre: string; descripcion?: string | null }[] }) {
   const [res, action, pending] = useActionState(crearUsuario, null);
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => { if (res === "ok") form.current?.reset(); }, [res]);
@@ -15,7 +15,7 @@ export function NuevoUsuario({ roles }: { roles: { id: string; clave: string; no
       <label className="md:col-span-1 space-y-1"><span className="text-xs text-espresso/60">Nombre</span><input name="nombre" required className={campo} /></label>
       <label className="md:col-span-2 space-y-1"><span className="text-xs text-espresso/60">Email</span><input name="email" type="email" required className={campo} /></label>
       <label className="md:col-span-1 space-y-1"><span className="text-xs text-espresso/60">Contraseña</span><input name="password" type="text" minLength={8} required className={campo} placeholder="mín. 8" /></label>
-      <label className="md:col-span-1 space-y-1"><span className="text-xs text-espresso/60">Rol</span>
+      <label className="md:col-span-1 space-y-1"><span className="text-xs text-espresso/60">Perfil</span>
         <select name="rol" className={campo}>{roles.map((r) => <option key={r.id} value={r.clave}>{r.nombre}</option>)}</select>
       </label>
       <div className="md:col-span-1 flex items-center gap-3">
