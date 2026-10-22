@@ -4,13 +4,22 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hoyMadrid } from "@/lib/fechas";
+import { ABIERTAS, aprobacionVigente, huellaDe, huellaPropuesta } from "@/lib/propuestas";
 
 type SB = Awaited<ReturnType<typeof createClient>>;
 const txt = (f: FormData, k: string) => { const v = String(f.get(k) ?? "").trim(); return v === "" ? null : v; };
 
-async function estadoLead(supabase: SB, leadId: string, nombre: string) {
+/** Cambia el estado del lead y deja constancia en su actividad */
+async function estadoLead(supabase: SB, leadId: string, nombre: string, nota?: string) {
   const { data } = await supabase.from("estados_lead").select("id").eq("nombre", nombre).maybeSingle();
-  if (data) await supabase.from("leads").update({ estado_id: data.id }).eq("id", leadId);
+  if (!data) return;
+  await supabase.from("leads").update({ estado_id: data.id }).eq("id", leadId);
+  await supabase.from("actividades").insert({ lead_id: leadId, tipo: "cambio_estado", descripcion: `Estado → ${nombre}${nota ? ` · ${nota}` : ""}` });
+}
+
+/** Cierra (caducada) las demás versiones abiertas del mismo lead */
+async function cerrarOtrasVersiones(supabase: SB, leadId: string, id: string) {
+  await supabase.from("propuestas").update({ estado: "caducada" }).eq("lead_id", leadId).neq("id", id).in("estado", ABIERTAS);
 }
 
 const refrescar = (id: string) => { revalidatePath(`/propuestas/${id}`); revalidatePath("/propuestas"); revalidatePath("/leads"); revalidatePath("/"); };
@@ -25,7 +34,7 @@ export async function crearPropuesta(f: FormData) {
     fecha_evento: lead?.fecha_prevista, asistentes: lead?.asistentes, responsable_id: lead?.responsable_id,
   }).select("id").single();
   if (error || !data) redirect(`/leads/${leadId}?error=${encodeURIComponent(error?.message ?? "Error")}`);
-  await estadoLead(supabase, leadId, "Propuesta en preparación");
+  await estadoLead(supabase, leadId, "Propuesta en preparación", `propuesta v${(ult?.version ?? 0) + 1} creada`);
   redirect(`/propuestas/${data.id}`);
 }
 
@@ -61,14 +70,20 @@ export async function enviarPropuesta(f: FormData) {
   if (minPax && p.asistentes && tot?.total && Number(tot.total) / p.asistentes < Number(minPax.valor)) motivos.push("Precio por persona inferior al mínimo");
 
   if (motivos.length) {
-    const { data: ap } = await supabase.from("aprobaciones").select("estado").eq("entidad_tipo", "propuesta").eq("entidad_id", id)
+    const { data: ap } = await supabase.from("aprobaciones").select("estado, detalle").eq("entidad_tipo", "propuesta").eq("entidad_id", id)
       .order("solicitada_en", { ascending: false }).limit(1).maybeSingle();
-    if (ap?.estado !== "aprobada") {
+    const huella = await huellaPropuesta(supabase, id);
+    const cambiada = ap?.estado === "aprobada" && huellaDe(ap.detalle) !== null && huellaDe(ap.detalle) !== huella;
+    if (ap?.estado !== "aprobada" || cambiada) {
       if (ap?.estado !== "pendiente") {
-        await supabase.from("aprobaciones").insert({ entidad_tipo: "propuesta", entidad_id: id, motivo: motivos.join(" · "), detalle: txt(f, "detalle") });
+        await supabase.from("aprobaciones").insert({
+          entidad_tipo: "propuesta", entidad_id: id,
+          motivo: motivos.join(" · ") + (cambiada ? " · propuesta modificada tras la aprobación anterior" : ""),
+          detalle: JSON.stringify({ huella }),
+        });
       }
       await supabase.from("propuestas").update({ estado: "pendiente_aprobacion" }).eq("id", id);
-      await estadoLead(supabase, p.lead_id, "Pendiente aprobación Groove");
+      await estadoLead(supabase, p.lead_id, "Pendiente aprobación Groove", motivos.join(" · "));
       refrescar(id);
       return;
     }
@@ -81,13 +96,20 @@ export async function enviarPropuesta(f: FormData) {
 export async function cambiarEstado(f: FormData) {
   const id = String(f.get("id"));
   const estado = String(f.get("estado"));
+  if (!["negociacion", "aceptada", "rechazada"].includes(estado)) return;
   const supabase = await createClient();
-  const { data: p } = await supabase.from("propuestas").select("lead_id").eq("id", id).single();
-  await supabase.from("propuestas").update({ estado }).eq("id", id);
-  if (p) {
-    const mapa: Record<string, string> = { negociacion: "Negociación", aceptada: "Confirmado", rechazada: "Perdido" };
-    if (mapa[estado]) await estadoLead(supabase, p.lead_id, mapa[estado]);
+  const { data: p } = await supabase.from("propuestas").select("lead_id, estado, codigo, version").eq("id", id).single();
+  if (!p) return;
+  if (estado === "aceptada") {
+    if (!["enviada", "negociacion", "aprobada"].includes(p.estado)) redirect(`/propuestas/${id}?error=${encodeURIComponent("Solo se puede aceptar una propuesta enviada, en negociación o aprobada.")}`);
+    const v = await aprobacionVigente(supabase, id);
+    if (!v.ok) redirect(`/propuestas/${id}?error=${encodeURIComponent(v.cambiada ? "La propuesta cambió después de aprobarse: vuelve a solicitar aprobación." : "Esta propuesta necesita aprobación de Groove antes de aceptarse.")}`);
+    await cerrarOtrasVersiones(supabase, p.lead_id, id);
   }
+  const { error } = await supabase.from("propuestas").update({ estado }).eq("id", id);
+  if (error) redirect(`/propuestas/${id}?error=${encodeURIComponent(error.message)}`);
+  const mapa: Record<string, string> = { negociacion: "Negociación", aceptada: "Confirmado", rechazada: "Perdido" };
+  await estadoLead(supabase, p.lead_id, mapa[estado], `${p.codigo} v${p.version}`);
   refrescar(id);
 }
 
@@ -115,7 +137,8 @@ export async function nuevaVersion(f: FormData) {
   if (!nueva) return;
   const { data: lineas } = await supabase.from("propuesta_lineas").select("bloque, catalogo_item_id, proveedor_id, descripcion, cantidad, precio_unitario, coste_unitario, orden").eq("propuesta_id", id);
   if (lineas?.length) await supabase.from("propuesta_lineas").insert(lineas.map((l) => ({ ...l, propuesta_id: nueva.id })));
-  await supabase.from("propuestas").update({ estado: "caducada" }).eq("id", id).in("estado", ["borrador", "enviada", "negociacion", "aprobada", "pendiente_aprobacion"]);
+  await supabase.from("propuestas").update({ estado: "caducada" }).eq("id", id).in("estado", ABIERTAS);
+  await supabase.from("actividades").insert({ lead_id: p.lead_id, tipo: "nota", descripcion: `Nueva versión de propuesta: v${(ult?.version ?? p.version) + 1} sustituye a v${p.version}` });
   redirect(`/propuestas/${nueva.id}`);
 }
 
@@ -126,6 +149,7 @@ export async function convertirEnEvento(f: FormData) {
   if (existe) redirect(`/eventos/${existe.id}`);
   const { data: p } = await supabase.from("propuestas").select("*, leads(cliente_id, categoria_id)").eq("id", id).single();
   if (!p) return;
+  if (p.estado !== "aceptada") redirect(`/propuestas/${id}?error=${encodeURIComponent("Solo se convierte en evento una propuesta aceptada.")}`);
   const lead = p.leads as { cliente_id: string | null; categoria_id: string | null } | null;
   const { data: ev, error } = await supabase.from("eventos").insert({
     nombre: p.titulo, propuesta_id: id, lead_id: p.lead_id, cliente_id: lead?.cliente_id, categoria_id: lead?.categoria_id,
@@ -144,8 +168,7 @@ export async function convertirEnEvento(f: FormData) {
     evento_id: ev.id, proveedor_id: l.proveedor_id, servicio: l.descripcion, coste: Number(l.cantidad) * Number(l.coste_unitario),
   })));
   if (espacios?.length) await supabase.from("evento_espacios").insert(espacios.map((e) => ({ evento_id: ev.id, espacio_id: e.espacio_id })));
-  if (p.estado !== "aceptada") await supabase.from("propuestas").update({ estado: "aceptada" }).eq("id", id);
-  await estadoLead(supabase, p.lead_id, "Confirmado");
+  await supabase.from("actividades").insert({ lead_id: p.lead_id, tipo: "cambio_estado", descripcion: `Convertida en evento · ${p.codigo} v${p.version}` });
   revalidatePath("/eventos");
   redirect(`/eventos/${ev.id}`);
 }

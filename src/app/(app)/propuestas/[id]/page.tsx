@@ -8,6 +8,7 @@ import { BLOQUES, EST_PROPUESTA } from "@/lib/estados";
 import { Aviso, Cabecera, Campo, Insignia, Kpi, Ocultos, Sel, Tarjeta, Vacio, boton, botonMini, botonSec, campo } from "@/components/ui";
 import { Comentarios } from "@/components/Comentarios";
 import { Espacios } from "@/components/Espacios";
+import { aprobacionVigente } from "@/lib/propuestas";
 import { anadirLinea, cambiarEstado, convertirEnEvento, decidirAprobacion, enviarPropuesta, nuevaVersion } from "../actions";
 
 export default async function Propuesta({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> }) {
@@ -39,6 +40,11 @@ export default async function Propuesta({ params, searchParams }: { params: Prom
   const total = Number(tot?.total ?? 0);
   const margenPct = total ? Math.round((Number(tot?.margen ?? 0) / total) * 100) : 0;
   const ultAprob = aprobs?.[0];
+  const [vig, { data: validadas }] = await Promise.all([
+    aprobacionVigente(supabase, id),
+    supabase.from("condiciones_estandar").select("valor").eq("regla", "condiciones_validadas").maybeSingle(),
+  ]);
+  const provisionales = Number(validadas?.valor ?? 0) !== 1;
   const responsables = (perfiles ?? []).filter((x) => (x.roles as unknown as { clave: string } | null)?.clave === "admin_tge");
   const cerrada = ["aceptada", "rechazada", "caducada"].includes(p.estado);
   const porBloque = Object.keys(BLOQUES).map((b) => ({ b, ls: (lineas ?? []).filter((l) => l.bloque === b) })).filter((x) => x.ls.length);
@@ -50,6 +56,9 @@ export default async function Propuesta({ params, searchParams }: { params: Prom
         <Insignia tono={est?.tono}>{est?.t}</Insignia>
       </Cabecera>
       <Aviso error={error} />
+      {vig.cambiada && !cerradaAntes(p.estado) && (
+        <p className="tarjeta border-bronze/60 px-4 py-3 text-sm text-bronze">La propuesta ha cambiado después de que Groove la aprobara. Para enviarla o aceptarla hay que solicitar una nueva aprobación.</p>
+      )}
 
       {editar && (
         <div className="tarjeta aparecer flex flex-wrap items-center gap-2 p-3">
@@ -57,12 +66,12 @@ export default async function Propuesta({ params, searchParams }: { params: Prom
             <form action={enviarPropuesta}>
               <input type="hidden" name="id" value={id} />
               <button className={boton} disabled={p.estado === "pendiente_aprobacion" && ultAprob?.estado === "pendiente"}>
-                {p.requiere_aprobacion && ultAprob?.estado !== "aprobada" ? (ultAprob?.estado === "pendiente" ? "Esperando aprobación de Groove…" : "Solicitar aprobación a Groove") : "Marcar como enviada al cliente"}
+                {!vig.ok ? (ultAprob?.estado === "pendiente" ? "Esperando aprobación de Groove…" : vig.cambiada ? "Solicitar nueva aprobación" : "Solicitar aprobación a Groove") : "Marcar como enviada al cliente"}
               </button>
             </form>
           )}
           {p.estado === "enviada" && <EstadoBtn id={id} estado="negociacion" t="En negociación" />}
-          {["enviada", "negociacion", "aprobada"].includes(p.estado) && <EstadoBtn id={id} estado="aceptada" t="✓ Aceptada por el cliente" fuerte />}
+          {["enviada", "negociacion", "aprobada"].includes(p.estado) && vig.ok && <EstadoBtn id={id} estado="aceptada" t="✓ Aceptada por el cliente" fuerte />}
           {["enviada", "negociacion"].includes(p.estado) && <EstadoBtn id={id} estado="rechazada" t="Rechazada" />}
           {p.estado === "aceptada" && (evento
             ? <Link href={`/eventos/${evento.id}`} className={boton}>Ver evento →</Link>
@@ -82,6 +91,7 @@ export default async function Propuesta({ params, searchParams }: { params: Prom
 
       {(p.requiere_aprobacion || (aprobs?.length ?? 0) > 0) && (
         <Tarjeta titulo="Aprobación de Groove" className={ultAprob?.estado === "pendiente" ? "border-bronze/60" : ""}>
+          {provisionales && <p className="mb-3 text-xs text-bronze">Condiciones estándar provisionales, pendientes de validar con Groove.</p>}
           {p.requiere_aprobacion && (
             <div className="mb-4 flex flex-wrap gap-2">
               {(p.motivos_aprobacion ?? []).map((m: string) => <Insignia key={m} tono="bronze">{m}</Insignia>)}
@@ -204,3 +214,5 @@ function EstadoBtn({ id, estado, t, fuerte }: { id: string; estado: string; t: s
     </form>
   );
 }
+
+const cerradaAntes = (estado: string) => ["aceptada", "rechazada", "caducada"].includes(estado);

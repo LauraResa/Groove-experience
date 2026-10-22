@@ -30,6 +30,8 @@ export default async function Configuracion({ searchParams }: { searchParams: Pr
   ]);
 
   const raices = (categorias ?? []).filter((c) => !c.padre_id);
+  const validacion = (condiciones ?? []).find((x) => x.regla === "condiciones_validadas");
+  const validadas = Number(validacion?.valor ?? 0) === 1;
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -43,6 +45,15 @@ export default async function Configuracion({ searchParams }: { searchParams: Pr
 
       <fieldset disabled={!editar} className="space-y-6">
         <Seccion id="condiciones_estandar" titulo="Condiciones estándar" texto="Si una propuesta se sale de estos límites, se genera una solicitud de aprobación para Groove. Deja vacío o desactiva lo que no quieras controlar.">
+          <form action={guardarFila} className={`mb-2 flex flex-wrap items-center gap-3 rounded-xl px-4 py-3 text-sm ${validadas ? "bg-olive/10 text-olive-deep" : "bg-bronze/15 text-bronze"}`}>
+            <input type="hidden" name="_tabla" value="condiciones_estandar" />
+            <input type="hidden" name="_id" value={validacion?.id ?? ""} />
+            <input type="hidden" name="regla" value="condiciones_validadas" />
+            <input type="hidden" name="valor" value={validadas ? "0" : "1"} />
+            <input type="hidden" name="activa" value="on" />
+            <span className="flex-1">{validadas ? "Condiciones validadas con Groove." : "Condiciones PROVISIONALES: pendientes de validar con Groove. Los valores actuales son orientativos."}</span>
+            <button className="rounded-lg border border-current px-3 py-1.5 text-xs">{validadas ? "Volver a marcar como provisionales" : "Marcar como validadas"}</button>
+          </form>
           {REGLAS.map((r) => {
             const c = (condiciones ?? []).find((x) => x.regla === r.regla);
             return (
