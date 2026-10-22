@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSesion } from "@/lib/sesion";
-import { ACCIONES, MODULOS } from "@/lib/modulos";
+import { ACCIONES, AREAS, MODULOS } from "@/lib/modulos";
 import { actualizarUsuario, alternarPermiso, borrarRol, crearRol, guardarRol } from "./actions";
 import { CambiarPassword, NuevoUsuario } from "./Formularios";
 
@@ -63,7 +63,7 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
           )}
 
           <Grupo titulo="Con acceso" texto={`${conPerfil.length} personas`}>
-            {conPerfil.map((p) => <FilaUsuario key={p.id} p={p} roles={rs} ve={pantallas(p.rol_id).map((m) => m.nombre)} />)}
+            {conPerfil.map((p) => <FilaUsuario key={p.id} p={p} roles={rs} ve={pantallas(p.rol_id)} />)}
           </Grupo>
         </>
       ) : (
@@ -125,7 +125,11 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
                     </tr>
                   </thead>
                   <tbody>
-                    {modulos.map((m) => {
+                    {AREAS.flatMap((area) => [
+                      <tr key={area} className="border-t border-stone/60 bg-stone/20">
+                        <td colSpan={ACCIONES.length + 1} className="px-5 py-1.5 text-[10px] uppercase tracking-[0.2em] text-bronze">{area}</td>
+                      </tr>,
+                      ...modulos.filter((m) => m.area === area).map((m) => {
                       const ve = tiene(sel.id, m.modulo, "ver");
                       return (
                         <tr key={m.modulo} className={`border-t border-stone/40 ${ve ? "" : "text-espresso/45"}`}>
@@ -151,7 +155,7 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
                           })}
                         </tr>
                       );
-                    })}
+                    })])}
                   </tbody>
                 </table>
               </div>
@@ -184,7 +188,7 @@ function Grupo({ titulo, texto, aviso, children }: { titulo: string; texto?: str
   );
 }
 
-function FilaUsuario({ p, roles, ve }: { p: Perfil; roles: { id: string; nombre: string }[]; ve: string[] }) {
+function FilaUsuario({ p, roles, ve }: { p: Perfil; roles: { id: string; nombre: string }[]; ve: { nombre: string; area: string }[] }) {
   return (
     <div className={`grid gap-3 px-5 py-4 md:grid-cols-[1.3fr_1fr_auto] md:items-center ${p.activo ? "" : "opacity-60"}`}>
       <div className="flex items-center gap-3 min-w-0">
@@ -213,7 +217,16 @@ function FilaUsuario({ p, roles, ve }: { p: Perfil; roles: { id: string; nombre:
         <details className="relative">
           <summary className="cursor-pointer list-none rounded-full bg-olive/10 px-2.5 py-1 text-xs text-olive-deep">{ve.length} pantallas</summary>
           <div className="absolute right-0 z-10 mt-2 w-64 rounded-xl border border-stone bg-cream p-3 shadow-xl">
-            {ve.length ? <div className="flex flex-wrap gap-1">{ve.map((n) => <span key={n} className="rounded-full bg-olive/10 px-2 py-0.5 text-[11px]">{n}</span>)}</div>
+            {ve.length ? (
+              <div className="space-y-2">
+                {AREAS.filter((a) => ve.some((m) => m.area === a)).map((a) => (
+                  <div key={a}>
+                    <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-bronze">{a}</p>
+                    <div className="flex flex-wrap gap-1">{ve.filter((m) => m.area === a).map((m) => <span key={m.nombre} className="rounded-full bg-olive/10 px-2 py-0.5 text-[11px]">{m.nombre}</span>)}</div>
+                  </div>
+                ))}
+              </div>
+            )
               : <p className="text-xs text-espresso/50">No ve ninguna pantalla.</p>}
           </div>
         </details>

@@ -1,20 +1,23 @@
 export const MODULOS = [
-  { slug: "", modulo: "inicio", nombre: "Inicio" },
-  { slug: "leads", modulo: "leads", nombre: "Leads" },
-  { slug: "propuestas", modulo: "propuestas", nombre: "Propuestas" },
-  { slug: "eventos", modulo: "eventos", nombre: "Eventos" },
-  { slug: "clientes", modulo: "clientes", nombre: "Clientes" },
-  { slug: "proveedores", modulo: "proveedores", nombre: "Proveedores" },
-  { slug: "formatos", modulo: "formatos", nombre: "Formatos propios" },
-  { slug: "calendario", modulo: "calendario", nombre: "Calendario" },
-  { slug: "roadmap", modulo: "roadmap", nombre: "Roadmap" },
-  { slug: "tareas", modulo: "tareas", nombre: "Tareas" },
-  { slug: "documentos", modulo: "documentos", nombre: "Documentos" },
-  { slug: "finanzas", modulo: "finanzas", nombre: "Finanzas" },
-  { slug: "reporting", modulo: "reporting", nombre: "Reporting" },
-  { slug: "configuracion", modulo: "configuracion", nombre: "Configuración" },
-  { slug: "usuarios", modulo: "usuarios", nombre: "Usuarios" },
+  { slug: "", modulo: "inicio", area: "Mi día", nombre: "Inicio" },
+  { slug: "leads", modulo: "leads", area: "Comercial", nombre: "Leads" },
+  { slug: "propuestas", modulo: "propuestas", area: "Comercial", nombre: "Propuestas" },
+  { slug: "eventos", modulo: "eventos", area: "Producción", nombre: "Eventos" },
+  { slug: "clientes", modulo: "clientes", area: "Comercial", nombre: "Clientes" },
+  { slug: "proveedores", modulo: "proveedores", area: "Producción", nombre: "Proveedores" },
+  { slug: "formatos", modulo: "formatos", area: "Desarrollo", nombre: "Formatos propios" },
+  { slug: "calendario", modulo: "calendario", area: "Producción", nombre: "Calendario" },
+  { slug: "roadmap", modulo: "roadmap", area: "Desarrollo", nombre: "Roadmap" },
+  { slug: "tareas", modulo: "tareas", area: "Mi día", nombre: "Tareas" },
+  { slug: "documentos", modulo: "documentos", area: "Recursos", nombre: "Documentos" },
+  { slug: "finanzas", modulo: "finanzas", area: "Control", nombre: "Finanzas" },
+  { slug: "reporting", modulo: "reporting", area: "Control", nombre: "Reporting" },
+  { slug: "configuracion", modulo: "configuracion", area: "Recursos", nombre: "Configuración" },
+  { slug: "usuarios", modulo: "usuarios", area: "Recursos", nombre: "Usuarios" },
 ] as const;
+
+/** Agrupación funcional (la misma que el antetítulo de cada pantalla) */
+export const AREAS = ["Mi día", "Comercial", "Producción", "Desarrollo", "Control", "Recursos"] as const;
 
 export const ACCIONES = [
   { clave: "ver", nombre: "Ver" },
