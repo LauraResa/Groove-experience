@@ -8,10 +8,13 @@ type Opcion = { id: string; nombre: string };
 
 const campo = "w-full rounded-lg border border-stone bg-cream px-3 py-2 text-sm outline-none focus:border-olive";
 
-export function NuevoLead({ estados, categorias, campanas, responsables }: {
+export function NuevoLead({ estados, categorias, campanas, responsables, abrir = false }: {
+  abrir?: boolean;
   estados: Opcion[]; categorias: Opcion[]; campanas: Opcion[]; responsables: Opcion[];
 }) {
-  const [abierto, setAbierto] = useState(false);
+  const [abierto, setAbierto] = useState(abrir);
+  const [montado, setMontado] = useState(false);
+  useEffect(() => setMontado(true), []);
   const [res, action, pending] = useActionState(crearLead, null);
   const form = useRef<HTMLFormElement>(null);
 
@@ -24,7 +27,7 @@ export function NuevoLead({ estados, categorias, campanas, responsables }: {
       <button onClick={() => setAbierto(true)} className="rounded-full bg-olive text-cream px-5 py-2.5 text-sm shadow-md shadow-olive/30 transition hover:bg-olive-deep hover:shadow-lg hover:-translate-y-px">
         + Nuevo lead
       </button>
-      {abierto && createPortal(
+      {abierto && montado && createPortal(
         <div><div className="fixed inset-0 z-50 flex justify-end bg-espresso/30 backdrop-blur-sm" onClick={() => setAbierto(false)}>
           <form ref={form} action={action} onClick={(e) => e.stopPropagation()}
             className="aparecer h-full w-full max-w-lg overflow-y-auto bg-cream p-6 space-y-4 shadow-2xl">

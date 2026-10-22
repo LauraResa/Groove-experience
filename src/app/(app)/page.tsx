@@ -83,12 +83,12 @@ export default async function Inicio() {
         </div>
         <div className="flex gap-2">
           {puede(s, "solicitudes", "crear") && (
-            <Link href="/leads" className="inline-flex items-center gap-1.5 rounded-lg border border-stone bg-cream/70 px-4 py-2 text-sm hover:border-olive transition">
+            <Link href="/leads?nuevo=1" className="inline-flex items-center gap-1.5 rounded-lg border border-stone bg-cream/70 px-4 py-2 text-sm hover:border-olive transition">
               <Icono n="mas" className="h-4 w-4" /> Solicitud
             </Link>
           )}
           {puede(s, "leads", "crear") && (
-            <Link href="/leads" className="inline-flex items-center gap-1.5 rounded-lg bg-olive px-4 py-2 text-sm text-cream shadow-md shadow-olive/25 hover:bg-olive-deep transition">
+            <Link href="/leads?nuevo=1" className="inline-flex items-center gap-1.5 rounded-lg bg-olive px-4 py-2 text-sm text-cream shadow-md shadow-olive/25 hover:bg-olive-deep transition">
               <Icono n="mas" className="h-4 w-4" /> Nuevo lead
             </Link>
           )}

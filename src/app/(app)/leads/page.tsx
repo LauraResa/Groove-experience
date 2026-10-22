@@ -10,7 +10,8 @@ const PRIORIDAD: Record<string, string> = {
   baja: "bg-stone/60", media: "bg-sand", alta: "bg-bronze/30", urgente: "bg-bronze text-cream",
 };
 
-export default async function Leads() {
+export default async function Leads({ searchParams }: { searchParams: Promise<{ nuevo?: string }> }) {
+  const { nuevo } = await searchParams;
   const s = await getSesion();
   if (!puede(s, "leads")) notFound();
   const supabase = await createClient();
@@ -40,7 +41,7 @@ export default async function Leads() {
           <p className="text-sm text-espresso/60 mt-1">{leads?.length ?? 0} oportunidades</p>
         </div>
         {puede(s, "leads", "crear") && (
-          <NuevoLead estados={estados ?? []} categorias={categorias ?? []} campanas={campanas ?? []} responsables={responsables} />
+          <NuevoLead key={nuevo ?? "-"} abrir={nuevo === "1"} estados={estados ?? []} categorias={categorias ?? []} campanas={campanas ?? []} responsables={responsables} />
         )}
       </header>
 
