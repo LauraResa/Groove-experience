@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSesion } from "@/lib/sesion";
 
@@ -66,6 +67,7 @@ export async function crearRol(f: FormData) {
     if (permisos?.length) await supabase.from("permisos").insert(permisos.map((p) => ({ ...p, rol_id: rol.id })));
   }
   revalidatePath("/usuarios");
+  if (rol) redirect(`/usuarios?vista=perfiles&perfil=${rol.id}`);
 }
 
 export async function guardarRol(f: FormData) {
@@ -81,4 +83,5 @@ export async function borrarRol(f: FormData) {
   if (count) return; // en uso
   await supabase.from("roles").delete().eq("id", id);
   revalidatePath("/usuarios");
+  redirect("/usuarios?vista=perfiles");
 }
