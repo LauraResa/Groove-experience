@@ -37,7 +37,7 @@ export default async function Eventos({ searchParams }: { searchParams: Promise<
 
   return (
     <div className="space-y-6 max-w-7xl">
-      <Cabecera ante="Operativa" titulo="Eventos" sub="Los eventos nacen al convertir una propuesta aceptada, o se crean a mano (formatos propios, eventos internos).">
+      <Cabecera ante="Producción" titulo="Eventos" sub="Los eventos nacen al convertir una propuesta aceptada, o se crean a mano (formatos propios, eventos internos).">
         {puede(s, "contenidos") && <Link href="/contenidos" className="inline-flex items-center gap-1.5 rounded-lg border border-stone bg-cream/70 px-4 py-2 text-sm hover:border-olive transition">Contenidos</Link>}
         {puede(s, "eventos", "crear") && (
           <Cajon boton={<><Icono n="mas" className="h-4 w-4" />Nuevo evento</>} titulo="Nuevo evento">

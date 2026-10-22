@@ -34,7 +34,7 @@ export default async function Configuracion({ searchParams }: { searchParams: Pr
   return (
     <div className="space-y-6 max-w-5xl">
       <header className="aparecer">
-        <p className="antetitulo">Ajustes</p>
+        <p className="antetitulo">Recursos</p>
         <h1 className="font-serif text-3xl md:text-4xl mt-1">Configuración</h1>
       </header>
 
