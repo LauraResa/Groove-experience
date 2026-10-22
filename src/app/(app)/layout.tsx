@@ -9,19 +9,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen md:flex">
-      <aside className="md:w-60 md:min-h-screen bg-olive-deep text-cream flex flex-col p-4 gap-6 md:sticky md:top-0">
-        <div className="px-3 pt-2">
-          <p className="text-[10px] tracking-[0.35em] text-sand">THE</p>
-          <p className="font-serif text-xl leading-tight">Groove Experience</p>
-        </div>
-        <Sidebar items={items} />
+      <Sidebar items={items} pie={
         <div className="px-3 text-xs text-cream/70 space-y-2">
           <p className="truncate">{s.nombre}</p>
           <form action={logout}>
             <button className="underline hover:text-cream">Cerrar sesión</button>
           </form>
         </div>
-      </aside>
+      } />
       <main className="flex-1 min-w-0 p-4 md:p-8">
         {s.rol ? children : (
           <div className="max-w-md rounded-xl bg-sand/60 border border-stone p-6">
