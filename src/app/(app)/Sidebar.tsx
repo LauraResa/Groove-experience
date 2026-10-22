@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Icono } from "./Icono";
 
-type Item = { slug: string; nombre: string };
+type Item = { slug: string; nombre: string; modulo: string };
 
 function Marca() {
   return (
-    <div>
-      <p className="text-[10px] tracking-[0.4em] text-bronze">THE</p>
-      <p className="font-serif text-xl leading-tight">Groove <em className="text-sand">Experience</em></p>
+    <div className="text-center md:text-left">
+      <p className="font-serif text-lg leading-tight">The Groove <em className="text-sand">Experience</em></p>
+      <p className="mt-1 text-[10px] tracking-[0.3em] text-cream/55">GESTIÓN</p>
     </div>
   );
 }
@@ -24,10 +25,11 @@ function Nav({ items, onNavegar }: { items: Item[]; onNavegar?: () => void }) {
         const activo = m.slug === "" ? path === "/" : path.startsWith(href);
         return (
           <Link key={m.slug} href={href} onClick={onNavegar}
-            className={`group relative flex items-center rounded-lg px-3 py-2 text-sm transition-all duration-300 ${
-              activo ? "bg-cream/10 text-cream" : "text-cream/65 hover:bg-cream/5 hover:text-cream hover:pl-4"
+            className={`group relative flex items-center rounded-lg px-3 py-2.5 text-sm transition-all duration-300 ${
+              activo ? "bg-cream/10 text-cream font-medium" : "text-cream/70 hover:bg-cream/5 hover:text-cream"
             }`}>
             <span className={`absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-bronze transition-opacity ${activo ? "opacity-100" : "opacity-0"}`} />
+            <Icono n={m.modulo} className={`h-[18px] w-[18px] mr-3 shrink-0 ${activo ? "text-sand" : "text-cream/55 group-hover:text-cream"}`} />
             {m.nombre}
           </Link>
         );
@@ -48,9 +50,7 @@ export function Sidebar({ items, pie }: { items: Item[]; pie: React.ReactNode })
         <Marca />
         <button onClick={() => setAbierto(true)} aria-label="Abrir menú"
           className="rounded-md p-2 hover:bg-olive/50">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M4 7h16M4 12h16M4 17h16" />
-          </svg>
+          <Icono n="menu" className="h-6 w-6" />
         </button>
       </header>
       {abierto && (
@@ -68,8 +68,8 @@ export function Sidebar({ items, pie }: { items: Item[]; pie: React.ReactNode })
       )}
 
       {/* Escritorio */}
-      <aside className="hidden md:flex md:w-60 md:h-screen md:sticky md:top-0 sidebar-fondo text-cream flex-col p-4 gap-8">
-        <div className="px-3 pt-2"><Marca /></div>
+      <aside className="hidden md:flex md:w-60 md:h-screen md:sticky md:top-0 sidebar-fondo text-cream flex-col p-4 gap-5">
+        <div className="px-3 pt-3 pb-5 border-b border-cream/10"><Marca /></div>
         <Nav items={items} />
         {pie}
       </aside>

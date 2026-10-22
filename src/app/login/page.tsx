@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { login } from "./actions";
 
@@ -29,6 +30,7 @@ export default function LoginPage() {
             className="w-full rounded-xl border border-stone bg-cream/80 px-4 py-2.5 outline-none transition focus:border-olive focus:ring-4 focus:ring-olive/15" />
         </label>
         {error && <p className="text-sm text-red-800">{error}</p>}
+        <p className="text-right -mt-3"><Link href="/login/recuperar" className="text-xs text-olive hover:text-bronze">¿Has olvidado tu contraseña?</Link></p>
         <button disabled={pending}
           className="w-full rounded-full bg-olive text-cream py-3 font-medium tracking-wide shadow-lg shadow-olive/30 transition hover:bg-olive-deep hover:-translate-y-px disabled:opacity-60">
           {pending ? "Entrando…" : "Entrar"}

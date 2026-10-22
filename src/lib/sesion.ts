@@ -7,6 +7,7 @@ export type Sesion = {
   nombre: string;
   email: string;
   rol: string | null;
+  superadmin: boolean;
   permisos: Set<string>; // "modulo:accion"
 };
 
@@ -17,7 +18,7 @@ export const getSesion = cache(async (): Promise<Sesion> => {
 
   const { data: perfil } = await supabase
     .from("perfiles")
-    .select("nombre, email, rol_id, roles(clave)")
+    .select("nombre, email, rol_id, superadmin, roles(clave)")
     .eq("id", user.id)
     .single();
 
@@ -31,8 +32,10 @@ export const getSesion = cache(async (): Promise<Sesion> => {
     nombre: perfil?.nombre ?? user.email ?? "",
     email: user.email ?? "",
     rol: rol?.clave ?? null,
+    superadmin: Boolean(perfil?.superadmin),
     permisos: new Set((permisos ?? []).map((p) => `${p.modulo}:${p.accion}`)),
   };
 });
 
-export const puede = (s: Sesion, modulo: string, accion = "ver") => s.permisos.has(`${modulo}:${accion}`);
+export const puede = (s: Sesion, modulo: string, accion = "ver") =>
+  modulo === "usuarios" ? s.superadmin : s.permisos.has(`${modulo}:${accion}`);

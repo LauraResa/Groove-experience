@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getSesion, puede } from "@/lib/sesion";
 import { MODULOS } from "@/lib/modulos";
 import { logout } from "@/app/login/actions";
@@ -10,10 +11,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen md:flex">
       <Sidebar items={items} pie={
-        <div className="px-3 text-xs text-cream/70 space-y-2">
-          <p className="truncate">{s.nombre}</p>
+        <div className="flex items-center gap-3 border-t border-cream/10 px-2 pt-4">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sand text-espresso text-xs font-semibold">
+            {s.nombre.charAt(0).toUpperCase()}
+          </span>
+          <Link href="/perfil" className="flex-1 truncate text-sm hover:text-sand" title="Mi perfil">{s.nombre}</Link>
           <form action={logout}>
-            <button className="underline hover:text-cream">Cerrar sesión</button>
+            <button className="text-xs text-cream/60 underline hover:text-cream">Salir</button>
           </form>
         </div>
       } />

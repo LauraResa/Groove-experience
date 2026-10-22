@@ -13,4 +13,14 @@ export const MODULOS = [
   { slug: "finanzas", modulo: "finanzas", nombre: "Finanzas" },
   { slug: "reporting", modulo: "reporting", nombre: "Reporting" },
   { slug: "configuracion", modulo: "configuracion", nombre: "Configuración" },
+  { slug: "usuarios", modulo: "usuarios", nombre: "Usuarios" },
+] as const;
+
+export const ACCIONES = [
+  { clave: "ver", nombre: "Ver" },
+  { clave: "crear", nombre: "Crear" },
+  { clave: "editar", nombre: "Editar" },
+  { clave: "borrar", nombre: "Borrar" },
+  { clave: "ver_importes", nombre: "Importes" },
+  { clave: "aprobar", nombre: "Aprobar" },
 ] as const;
