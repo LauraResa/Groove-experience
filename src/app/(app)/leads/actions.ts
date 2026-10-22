@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { madridAIso } from "@/lib/fechas";
 
 const txt = (f: FormData, k: string) => {
   const v = String(f.get(k) ?? "").trim();
@@ -95,7 +96,7 @@ export async function anadirActividad(f: FormData) {
   await supabase.from("actividades").insert({
     lead_id,
     tipo: txt(f, "tipo") ?? "nota",
-    inicio: inicio ? new Date(inicio).toISOString() : null,
+    inicio: inicio ? madridAIso(inicio) : null,
     descripcion: txt(f, "descripcion"),
   });
   revalidatePath(`/leads/${lead_id}`);

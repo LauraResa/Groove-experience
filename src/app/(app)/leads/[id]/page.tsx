@@ -4,6 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getSesion, puede } from "@/lib/sesion";
 import { Icono } from "../../Icono";
 import { actualizarLead, anadirActividad, comentar } from "../actions";
+import { crearPropuesta } from "../../propuestas/actions";
+import { Espacios } from "@/components/Espacios";
+import { TareasDe } from "@/components/Tareas";
 
 const campo = "w-full rounded-lg border border-stone bg-cream/80 px-3 py-2 text-sm outline-none focus:border-olive disabled:bg-transparent disabled:border-transparent disabled:px-0";
 const eur = (n: number) => n.toLocaleString("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
@@ -99,16 +102,26 @@ export default async function FichaLead({ params }: { params: Promise<{ id: stri
                 {contacto.telefono && <a href={`tel:${contacto.telefono}`} className="block text-olive hover:text-bronze">{contacto.telefono}</a>}
               </div>
             ) : <p className="text-sm text-espresso/50">Sin contacto</p>}
-            {cliente && <p className="mt-3 pt-3 border-t border-stone/50 text-xs text-espresso/60">Cliente: <span className="text-espresso">{cliente.nombre}</span> · {cliente.tipo}</p>}
+            {cliente && <p className="mt-3 pt-3 border-t border-stone/50 text-xs text-espresso/60">Cliente: <Link href={`/clientes/${cliente.id}`} className="text-olive hover:text-bronze">{cliente.nombre}</Link> · {cliente.tipo}</p>}
+            <div className="mt-3 pt-3 border-t border-stone/50">
+              <p className="mb-2 text-xs text-espresso/60">Espacios de interés</p>
+              <Espacios tabla="lead_espacios" col="lead_id" id={lead.id} volver={`/leads/${lead.id}`} editar={editar} />
+            </div>
           </div>
 
           <div className="tarjeta aparecer p-5">
-            <h2 className="font-serif text-lg mb-3">Propuestas</h2>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-serif text-lg">Propuestas</h2>
+              {puede(s, "propuestas", "crear") && (
+                <form action={crearPropuesta}><input type="hidden" name="lead_id" value={lead.id} />
+                  <button className="rounded-md bg-olive px-2.5 py-1 text-xs text-cream hover:bg-olive-deep">+ Nueva</button></form>
+              )}
+            </div>
             {propuestas?.length ? (
               <ul className="space-y-2 text-sm">
                 {propuestas.map((p) => (
                   <li key={p.id} className="flex items-center justify-between gap-2">
-                    <span className="truncate">{p.codigo} · v{p.version}</span>
+                    <Link href={`/propuestas/${p.id}`} className="truncate hover:text-olive">{p.codigo} · v{p.version}</Link>
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] ${p.requiere_aprobacion ? "bg-bronze/20 text-bronze" : "bg-olive/15 text-olive-deep"}`}>{EST_PROP[p.estado] ?? p.estado}</span>
                   </li>
                 ))}
@@ -117,6 +130,8 @@ export default async function FichaLead({ params }: { params: Promise<{ id: stri
           </div>
         </div>
       </div>
+
+      <TareasDe tipo="lead" id={lead.id} volver={`/leads/${lead.id}`} editar={puede(s, "tareas", "crear")} />
 
       <div className="grid lg:grid-cols-2 gap-4">
         <section className="tarjeta aparecer p-5 md:p-6">
