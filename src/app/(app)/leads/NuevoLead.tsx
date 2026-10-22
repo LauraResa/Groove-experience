@@ -36,6 +36,10 @@ export function NuevoLead({ estados, categorias, campanas, responsables, abrir =
               <button type="button" onClick={() => setAbierto(false)} className="text-sm">Cerrar</button>
             </div>
             <L t="Título / oportunidad"><input name="titulo" required className={campo} placeholder="Cena Navidad ACME" /></L>
+            <div className="grid grid-cols-[1fr_10rem] gap-3 rounded-xl bg-olive/10 p-3">
+              <L t="Próxima acción"><input name="proxima_accion" required className={campo} placeholder="Ej. Llamar para entender necesidades" /></L>
+              <L t="Fecha"><input name="fecha_proxima_accion" type="date" required defaultValue={enDosDias()} className={campo} /></L>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <L t="Empresa / cliente"><input name="empresa" className={campo} /></L>
               <L t="Tipo"><select name="tipo_cliente" className={campo}>
@@ -55,8 +59,6 @@ export function NuevoLead({ estados, categorias, campanas, responsables, abrir =
               </select></L>
               <L t="Responsable"><Sel name="responsable_id" ops={responsables} vacio /></L>
               <L t="Estado"><Sel name="estado_id" ops={estados} /></L>
-              <L t="Próxima acción"><input name="proxima_accion" className={campo} /></L>
-              <L t="Fecha próxima acción"><input name="fecha_proxima_accion" type="date" className={campo} /></L>
             </div>
             <L t="Notas"><textarea name="notas" rows={3} className={campo} /></L>
             {res && res !== "ok" && <p className="text-sm text-red-800">{res}</p>}
@@ -83,3 +85,5 @@ function Sel({ name, ops, vacio }: { name: string; ops: Opcion[]; vacio?: boolea
     </select>
   );
 }
+
+const enDosDias = () => new Date(Date.now() + 2 * 864e5).toLocaleDateString("sv-SE", { timeZone: "Europe/Madrid" });

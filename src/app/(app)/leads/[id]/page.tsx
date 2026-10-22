@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSesion, puede } from "@/lib/sesion";
 import { Icono } from "../../Icono";
-import { actualizarLead, anadirActividad, comentar } from "../actions";
+import { actualizarLead, anadirActividad, comentar, registrarSeguimiento } from "../actions";
+import { fFecha, hoyMadrid } from "@/lib/fechas";
 import { crearPropuesta } from "../../propuestas/actions";
 import { Espacios } from "@/components/Espacios";
 import { TareasDe } from "@/components/Tareas";
@@ -61,6 +62,8 @@ export default async function FichaLead({ params }: { params: Promise<{ id: stri
         </div>
       </header>
 
+      <ProximaAccion lead={lead} editar={editar} cerrado={!!(estado?.es_perdido || (estados ?? []).find((e) => e.id === lead.estado_id && e.nombre === "Confirmado"))} />
+
       <div className="grid lg:grid-cols-3 gap-4">
         <form action={actualizarLead} className="tarjeta aparecer lg:col-span-2 p-5 md:p-6">
           <input type="hidden" name="id" value={lead.id} />
@@ -80,10 +83,6 @@ export default async function FichaLead({ params }: { params: Promise<{ id: stri
               <L t="Fecha prevista"><input name="fecha_prevista" type="date" defaultValue={lead.fecha_prevista ?? ""} className={campo} /></L>
               <L t="Asistentes"><input name="asistentes" type="number" min="0" defaultValue={lead.asistentes ?? ""} className={campo} /></L>
               {importes && <L t="Presupuesto estimado (€)"><input name="presupuesto" type="number" min="0" step="0.01" defaultValue={lead.presupuesto_estimado ?? ""} className={campo} /></L>}
-            </div>
-            <div className="grid md:grid-cols-[1fr_12rem] gap-3">
-              <L t="Próxima acción"><input name="proxima_accion" defaultValue={lead.proxima_accion ?? ""} className={campo} /></L>
-              <L t="Fecha próxima acción"><input name="fecha_proxima_accion" type="date" defaultValue={lead.fecha_proxima_accion ?? ""} className={campo} /></L>
             </div>
             {(estado?.es_perdido || lead.motivo_perdida) && (
               <L t="Motivo de pérdida / cancelación"><input name="motivo_perdida" defaultValue={lead.motivo_perdida ?? ""} className={campo} /></L>
@@ -197,5 +196,44 @@ function Sel({ name, valor, ops, vacio }: { name: string; valor: string | null; 
       {vacio && <option value="">—</option>}
       {ops.map((o) => <option key={o.id} value={o.id}>{o.nombre}</option>)}
     </select>
+  );
+}
+
+function ProximaAccion({ lead, editar, cerrado }: { lead: { id: string; proxima_accion: string | null; fecha_proxima_accion: string | null }; editar: boolean; cerrado: boolean }) {
+  const hoy = hoyMadrid();
+  const en2 = new Date(new Date(`${hoy}T12:00:00Z`).getTime() + 2 * 864e5).toISOString().slice(0, 10);
+  const vencida = !!lead.fecha_proxima_accion && lead.fecha_proxima_accion < hoy;
+  const tono = !lead.proxima_accion ? (cerrado ? "border-stone" : "border-bronze/60 bg-bronze/5") : vencida ? "border-bronze/60 bg-bronze/5" : "border-olive/40";
+  return (
+    <section className={`tarjeta aparecer p-5 ${tono}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="antetitulo">Próxima acción</p>
+          {lead.proxima_accion ? (
+            <p className="mt-1 font-serif text-xl">{lead.proxima_accion}
+              <span className={`ml-2 align-middle text-sm font-sans ${vencida ? "text-bronze" : "text-espresso/60"}`}>
+                {lead.fecha_proxima_accion ? (vencida ? `vencida · ${fFecha(lead.fecha_proxima_accion, { day: "numeric", month: "short" })}` : lead.fecha_proxima_accion === hoy ? "hoy" : fFecha(lead.fecha_proxima_accion, { weekday: "short", day: "numeric", month: "short" })) : "sin fecha"}
+              </span>
+            </p>
+          ) : <p className={`mt-1 text-sm ${cerrado ? "text-espresso/50" : "text-bronze"}`}>{cerrado ? "Lead cerrado." : "⚠ Sin próxima acción: define el siguiente paso y su fecha."}</p>}
+        </div>
+      </div>
+      {editar && (
+        <form action={registrarSeguimiento} className="mt-4 grid gap-2 md:grid-cols-[9rem_1fr_1fr_10rem_auto] md:items-end">
+          <input type="hidden" name="lead_id" value={lead.id} />
+          <label className="space-y-1"><span className="text-xs text-espresso/60">Cómo fue</span>
+            <select name="tipo" defaultValue="llamada" className={campo}>
+              {["llamada", "email", "whatsapp", "reunion", "visita", "nota"].map((t) => <option key={t} value={t}>{TIPOS[t]}</option>)}
+            </select></label>
+          <label className="space-y-1"><span className="text-xs text-espresso/60">{lead.proxima_accion ? "Resultado (opcional)" : "Nota (opcional)"}</span>
+            <input name="nota" placeholder="Qué se ha hablado" className={campo} /></label>
+          <label className="space-y-1"><span className="text-xs text-espresso/60">Siguiente acción</span>
+            <input name="proxima_accion" required={!cerrado} placeholder="Ej. Llamar para cerrar menú" className={campo} /></label>
+          <label className="space-y-1"><span className="text-xs text-espresso/60">Fecha</span>
+            <input name="fecha_proxima_accion" type="date" required={!cerrado} defaultValue={en2} className={campo} /></label>
+          <button className="rounded-lg bg-olive px-4 py-2 text-sm text-cream hover:bg-olive-deep">{lead.proxima_accion ? "✓ Hecho y siguiente" : "Fijar acción"}</button>
+        </form>
+      )}
+    </section>
   );
 }

@@ -80,9 +80,8 @@ export async function actualizarLead(f: FormData) {
     responsable_id: txt(f, "responsable_id"),
     estado_id: txt(f, "estado_id"),
     prioridad: txt(f, "prioridad") ?? "media",
-    proxima_accion: txt(f, "proxima_accion"),
-    fecha_proxima_accion: txt(f, "fecha_proxima_accion"),
-    motivo_perdida: txt(f, "motivo_perdida"),
+    ...(f.has("proxima_accion") ? { proxima_accion: txt(f, "proxima_accion"), fecha_proxima_accion: txt(f, "fecha_proxima_accion") } : {}),
+    ...(f.has("motivo_perdida") ? { motivo_perdida: txt(f, "motivo_perdida") } : {}),
     notas: txt(f, "notas"),
   }).eq("id", id);
   revalidatePath(`/leads/${id}`);
@@ -110,4 +109,24 @@ export async function comentar(f: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   await supabase.from("comentarios").insert({ entidad_tipo: txt(f, "entidad_tipo"), entidad_id, texto, autor_id: user?.id });
   revalidatePath(`/leads/${entidad_id}`);
+}
+
+/** Cierra la próxima acción actual (la registra en la actividad) y fija la siguiente */
+export async function registrarSeguimiento(f: FormData) {
+  const id = txt(f, "lead_id");
+  if (!id) return;
+  const supabase = await createClient();
+  const { data: lead } = await supabase.from("leads").select("proxima_accion").eq("id", id).single();
+  const hecho = lead?.proxima_accion;
+  const nota = txt(f, "nota");
+  if (hecho || nota) {
+    await supabase.from("actividades").insert({
+      lead_id: id, tipo: txt(f, "tipo") ?? "nota",
+      descripcion: [hecho && `Hecho: ${hecho}`, nota].filter(Boolean).join(" — "),
+    });
+  }
+  await supabase.from("leads").update({ proxima_accion: txt(f, "proxima_accion"), fecha_proxima_accion: txt(f, "fecha_proxima_accion") }).eq("id", id);
+  revalidatePath(`/leads/${id}`);
+  revalidatePath("/leads");
+  revalidatePath("/");
 }

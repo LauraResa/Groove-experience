@@ -3,6 +3,7 @@ export const MODULOS = [
   { slug: "leads", modulo: "leads", area: "Comercial", nombre: "Leads" },
   { slug: "propuestas", modulo: "propuestas", area: "Comercial", nombre: "Propuestas" },
   { slug: "eventos", modulo: "eventos", area: "Producción", nombre: "Eventos" },
+  { slug: "contenidos", modulo: "contenidos", area: "Producción", nombre: "Contenidos" },
   { slug: "clientes", modulo: "clientes", area: "Comercial", nombre: "Clientes" },
   { slug: "proveedores", modulo: "proveedores", area: "Producción", nombre: "Proveedores" },
   { slug: "formatos", modulo: "formatos", area: "Desarrollo", nombre: "Formatos propios" },
