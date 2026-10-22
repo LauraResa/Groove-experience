@@ -4,14 +4,14 @@ Centro de gestión comercial, operativa y estratégica de THE GROOVE EXPERIENCE.
 
 **Estado:** MVP en desarrollo. Base de datos desplegada en Supabase; app con login, inicio y leads (kanban).
 
-## Stack previsto
+## Stack
 
 | Capa | Tecnología |
 |---|---|
 | Frontend + API | Next.js 15 (App Router, Server Actions) + TypeScript |
-| UI | Tailwind CSS + shadcn/ui (tokens de la paleta Groove) |
+| UI | Tailwind CSS (tokens de la paleta Groove) |
 | Base de datos | Supabase Postgres con RLS |
-| Auth | Supabase Auth (email + magic link) |
+| Auth | Supabase Auth (email + contraseña) |
 | Ficheros | Supabase Storage |
 | Hosting | Vercel |
 | Entrada futura de solicitudes | Webhook (Vercel Route / Supabase Edge Function) |
