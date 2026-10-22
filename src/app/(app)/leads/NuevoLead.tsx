@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { crearLead } from "./actions";
 
 type Opcion = { id: string; nombre: string };
@@ -23,8 +24,8 @@ export function NuevoLead({ estados, categorias, campanas, responsables }: {
       <button onClick={() => setAbierto(true)} className="rounded-full bg-olive text-cream px-5 py-2.5 text-sm shadow-md shadow-olive/30 transition hover:bg-olive-deep hover:shadow-lg hover:-translate-y-px">
         + Nuevo lead
       </button>
-      {abierto && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-espresso/30 backdrop-blur-sm" onClick={() => setAbierto(false)}>
+      {abierto && createPortal(
+        <div><div className="fixed inset-0 z-50 flex justify-end bg-espresso/30 backdrop-blur-sm" onClick={() => setAbierto(false)}>
           <form ref={form} action={action} onClick={(e) => e.stopPropagation()}
             className="aparecer h-full w-full max-w-lg overflow-y-auto bg-cream p-6 space-y-4 shadow-2xl">
             <div className="flex justify-between items-center">
@@ -60,7 +61,8 @@ export function NuevoLead({ estados, categorias, campanas, responsables }: {
               {pending ? "Guardando…" : "Guardar lead"}
             </button>
           </form>
-        </div>
+        </div></div>,
+        document.body,
       )}
     </>
   );
