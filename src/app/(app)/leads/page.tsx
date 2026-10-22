@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSesion, puede } from "@/lib/sesion";
@@ -62,7 +63,7 @@ export default async function Leads() {
                       <span className="text-[10px] text-espresso/50">{l.codigo}</span>
                       <span className={`text-[10px] rounded-full px-2 ${PRIORIDAD[l.prioridad]}`}>{l.prioridad}</span>
                     </div>
-                    <p className="font-medium leading-snug">{l.titulo}</p>
+                    <Link href={`/leads/${l.id}`} className="block font-medium leading-snug hover:text-olive">{l.titulo}</Link>
                     {cliente && <p className="text-xs text-espresso/70">{cliente.nombre}</p>}
                     <p className="text-xs text-espresso/60">
                       {[l.fecha_prevista, l.asistentes && `${l.asistentes} pax`, importes && l.presupuesto_estimado && eur(Number(l.presupuesto_estimado))]

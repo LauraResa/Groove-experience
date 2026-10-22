@@ -62,3 +62,51 @@ export async function moverLead(f: FormData) {
   revalidatePath("/leads");
   revalidatePath("/");
 }
+
+const num = (f: FormData, k: string) => (txt(f, k) ? Number(f.get(k)) : null);
+
+export async function actualizarLead(f: FormData) {
+  const id = txt(f, "id");
+  const supabase = await createClient();
+  await supabase.from("leads").update({
+    titulo: txt(f, "titulo") ?? "Sin título",
+    origen: txt(f, "origen"),
+    categoria_id: txt(f, "categoria_id"),
+    campana_id: txt(f, "campana_id"),
+    fecha_prevista: txt(f, "fecha_prevista"),
+    asistentes: num(f, "asistentes"),
+    presupuesto_estimado: num(f, "presupuesto"),
+    responsable_id: txt(f, "responsable_id"),
+    estado_id: txt(f, "estado_id"),
+    prioridad: txt(f, "prioridad") ?? "media",
+    proxima_accion: txt(f, "proxima_accion"),
+    fecha_proxima_accion: txt(f, "fecha_proxima_accion"),
+    motivo_perdida: txt(f, "motivo_perdida"),
+    notas: txt(f, "notas"),
+  }).eq("id", id);
+  revalidatePath(`/leads/${id}`);
+  revalidatePath("/leads");
+}
+
+export async function anadirActividad(f: FormData) {
+  const lead_id = txt(f, "lead_id");
+  const supabase = await createClient();
+  const inicio = txt(f, "inicio");
+  await supabase.from("actividades").insert({
+    lead_id,
+    tipo: txt(f, "tipo") ?? "nota",
+    inicio: inicio ? new Date(inicio).toISOString() : null,
+    descripcion: txt(f, "descripcion"),
+  });
+  revalidatePath(`/leads/${lead_id}`);
+}
+
+export async function comentar(f: FormData) {
+  const entidad_id = txt(f, "entidad_id");
+  const texto = txt(f, "texto");
+  if (!texto) return;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  await supabase.from("comentarios").insert({ entidad_tipo: txt(f, "entidad_tipo"), entidad_id, texto, autor_id: user?.id });
+  revalidatePath(`/leads/${entidad_id}`);
+}
