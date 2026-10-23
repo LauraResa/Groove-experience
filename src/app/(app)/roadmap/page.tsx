@@ -97,7 +97,6 @@ export default async function Roadmap({ searchParams }: { searchParams: Promise<
       {hito?.fecha_inicio && (
         <div className="tarjeta aparecer flex flex-wrap items-baseline gap-x-3 gap-y-1 border-olive/40 px-5 py-4">
           <p className="font-serif text-lg">Inicio operativo del proyecto: <b className="font-semibold">{f(hito.fecha_inicio)}</b></p>
-          <p className="text-sm text-espresso/60">Contrato pendiente de firma.</p>
         </div>
       )}
 

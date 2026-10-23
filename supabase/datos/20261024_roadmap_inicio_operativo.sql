@@ -29,21 +29,21 @@ begin
     (1, 'Comercial',    'Inicio operativo (22–23/10/2026)', 'Estructura y planteamiento de los dosieres comerciales de THE GROOVE EXPERIENCE y de sus diferentes líneas', v_laura, v_cristina, v_hito, '2026-10-22', '2026-10-23', 'finalizado', 'alta', c_hecho),
     (1, 'Operativa',    'Inicio operativo (22–23/10/2026)', 'Organización de la información y documentación base necesaria para comenzar el desarrollo comercial y operativo', v_laura, v_cristina, v_hito, '2026-10-22', '2026-10-23', 'finalizado', 'media', c_hecho);
 
-  -- 10-12 · En curso
+  -- 10-13 · En curso
   insert into roadmap_items (semana, area, objetivo, titulo, responsable_id, colaborador_id, estado, prioridad, comentarios) values
     (2, 'Comercial', 'En curso', 'Dossier general de THE GROOVE EXPERIENCE', v_laura, v_cristina, 'en_curso', 'alta', 'Laura y Cristina.');
   insert into roadmap_items (semana, area, objetivo, titulo, responsable_id, colaborador_id, estado, prioridad, comentarios)
   values (2, 'Operativa', 'En curso', 'Accesos a plataformas y herramientas', v_laura, v_cristina, 'en_curso', 'alta', 'Pendiente de terceros. Laura y Cristina.')
   returning id into v_accesos;
   insert into roadmap_items (semana, area, objetivo, titulo, responsable_id, colaborador_id, depende_de_id, estado, prioridad, comentarios) values
-    (2, 'Comercial', 'En curso', 'Revisión y respuesta de emails y solicitudes pendientes', v_laura, v_cristina, v_accesos, 'en_curso', 'alta', 'En cuanto tengamos los accesos. Laura y Cristina.');
+    (2, 'Comercial', 'En curso', 'Revisión y respuesta de emails y solicitudes pendientes', v_laura, v_cristina, v_accesos, 'en_curso', 'alta', 'En cuanto tengamos los accesos. Laura y Cristina.'),
+    (2, 'Comercial', 'En curso', 'Gestión y seguimiento de nuevas solicitudes', v_laura, v_cristina, v_accesos, 'en_curso', 'media', 'En cuanto tengamos los accesos. Laura y Cristina.');
 
-  -- 13-18 · Próximos pasos previstos (sin fecha acordada)
+  -- 14-18 · Próximos pasos previstos (sin fecha acordada)
   insert into roadmap_items (area, objetivo, titulo, responsable_id, colaborador_id, estado, prioridad, comentarios) values
     ('Comercial',    'Próximos pasos previstos', 'Desarrollo de los dosieres específicos de las líneas', v_laura, v_cristina, 'pendiente', 'alta', 'Laura y Cristina.'),
     ('Comunicación', 'Próximos pasos previstos', 'Agendar el primer shooting comercial', v_laura, v_cristina, 'pendiente', 'media', 'Laura y Cristina.'),
     ('Comercial',    'Próximos pasos previstos', 'Activar la campaña de Navidad', v_laura, v_cristina, 'pendiente', 'alta', 'Laura y Cristina.'),
     ('Desarrollo',   'Próximos pasos previstos', 'Dar forma al Social Club', v_laura, v_cristina, 'pendiente', 'media', 'Laura y Cristina.'),
-    ('Comercial',    'Próximos pasos previstos', 'Gestionar nuevas solicitudes', v_laura, v_cristina, 'pendiente', 'media', 'Laura y Cristina.'),
     ('Operativa',    'Próximos pasos previstos', 'Completar la información pendiente del checklist', v_laura, v_cristina, 'pendiente', 'media', 'Laura y Cristina.');
 end $$;
