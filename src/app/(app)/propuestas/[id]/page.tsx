@@ -133,7 +133,14 @@ export default async function Propuesta({ params, searchParams }: { params: Prom
                     <Ocultos v={{ _tabla: "propuesta_lineas", _id: l.id, _volver: volver }} />
                     <div className="col-span-6 md:col-span-1">
                       <input name="descripcion" defaultValue={l.descripcion} disabled={!editar || cerrada} className={`${campo} py-1.5`} />
-                      {(l.proveedores as { empresa: string } | null) && <p className="mt-0.5 px-1 text-[11px] text-espresso/50">{(l.proveedores as { empresa: string }).empresa}</p>}
+                      <div className="mt-0.5 flex flex-wrap items-center gap-3 px-1 text-[11px] text-espresso/50">
+                        {(l.proveedores as { empresa: string } | null) && <span>{(l.proveedores as { empresa: string }).empresa}</span>}
+                        <label className={`inline-flex items-center gap-1 ${l.extraordinario ? "text-bronze" : ""}`} title="Marca esta opción solo si este concepto supone un gasto o inversión especial fuera de la operativa habitual y debe ser revisado por Groove.">
+                          <input type="hidden" name="_b" value="extraordinario" />
+                          <input type="checkbox" name="extraordinario" defaultChecked={l.extraordinario} disabled={!editar || cerrada} className="accent-bronze" />
+                          Extraordinario
+                        </label>
+                      </div>
                     </div>
                     <input name="cantidad" type="number" step="0.01" defaultValue={l.cantidad} title="Cantidad" disabled={!editar || cerrada} className={`${campo} py-1.5`} />
                     {importes && <input name="precio_unitario" type="number" step="0.01" defaultValue={l.precio_unitario} title="Precio unitario" disabled={!editar || cerrada} className={`${campo} py-1.5`} />}
@@ -172,7 +179,11 @@ export default async function Propuesta({ params, searchParams }: { params: Prom
                 <input name="cantidad" type="number" step="0.01" placeholder="Cant." defaultValue={p.asistentes ?? 1} className={campo} />
                 {importes && <input name="precio_unitario" type="number" step="0.01" placeholder="Precio ud." className={campo} />}
                 {importes && <input name="coste_unitario" type="number" step="0.01" placeholder="Coste ud." className={campo} />}
-                <button className={`${boton} col-span-2 md:col-span-6 md:justify-self-end`}>Añadir servicio</button>
+                <label className="col-span-2 flex items-start gap-1.5 text-xs text-espresso/65 md:col-span-3">
+                  <input type="checkbox" name="extraordinario" className="mt-0.5 accent-bronze" />
+                  <span><b className="font-medium text-espresso">Extraordinario.</b> Marca esta opción solo si este concepto supone un gasto o inversión especial fuera de la operativa habitual y debe ser revisado por Groove.</span>
+                </label>
+                <button className={`${boton} col-span-2 md:col-span-3 md:justify-self-end`}>Añadir servicio</button>
               </form>
             )}
           </Tarjeta>

@@ -13,7 +13,7 @@ const REGLAS = [
   { regla: "descuento_max_pct", nombre: "Descuento máximo", unidad: "%", ayuda: "Si una propuesta lleva más descuento, necesita aprobación de Groove." },
   { regla: "margen_min_pct", nombre: "Margen mínimo", unidad: "%", ayuda: "Si el margen de una propuesta queda por debajo, necesita aprobación." },
   { regla: "precio_min_pax", nombre: "Precio mínimo por persona", unidad: "€", ayuda: "Si el precio por asistente queda por debajo, necesita aprobación." },
-  { regla: "importe_max_sin_aprobar", nombre: "Importe máximo sin aprobación", unidad: "€", ayuda: "Si el total supera esta cifra, necesita aprobación." },
+  { regla: "gasto_extraordinario_max", nombre: "Gasto/inversión extraordinaria máxima sin aprobación", unidad: "€", ayuda: "Suma del coste de las líneas marcadas como «extraordinario» en la propuesta (inversión en decoración, montaje especial…). Si la supera, necesita aprobación. Un evento grande no pide aprobación por serlo." },
 ];
 
 const TXT_PROPUESTA: Record<string, string> = {
@@ -256,9 +256,11 @@ export default async function Configuracion({ searchParams }: { searchParams: Pr
             })}
           </div>
 
-          <p className="mt-4 text-xs text-espresso/60">
-            Además, ahora mismo la app también pide aprobación cuando una propuesta incluye un proveedor que no está en el catálogo. Es una comprobación provisional: falta decidir con Groove si se mantiene.
-          </p>
+          <div className="mt-4 rounded-xl bg-cream/60 px-4 py-3 text-xs text-espresso/70">
+            <p className="font-medium text-espresso">Proveedor o condición excepcional</p>
+            <p className="mt-0.5">Se pide aprobación cuando una propuesta incluye un proveedor o servicio que no está en el catálogo. También es provisional.</p>
+          </div>
+          <p className="mt-3 text-xs text-espresso/55">Groove solo interviene en estas excepciones: descuento superior al permitido, margen inferior al mínimo, gasto/inversión extraordinaria o proveedor/condición excepcional.</p>
 
           <form action={guardarFila} className="mt-4 flex flex-wrap items-center justify-end gap-3 border-t border-stone/50 pt-4">
             <input type="hidden" name="_tabla" value="condiciones_estandar" />

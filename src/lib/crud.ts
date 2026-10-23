@@ -13,7 +13,7 @@ const TABLAS: Record<string, Record<string, T>> = {
   proveedores: { categoria_id: "u", empresa: "t", contacto: "t", telefono: "t", email: "t", web: "t", servicios: "t", tipo: "t", valoracion: "n", notas: "t" },
   catalogo_items: { proveedor_id: "u", nombre: "t", bloque: "t", unidad: "t", precio: "n", coste: "n", condiciones: "t", vigente_desde: "d", vigente_hasta: "d", activo: "b" },
   propuestas: { titulo: "t", fecha_evento: "d", asistentes: "n", descuento_pct: "n", condiciones: "t", fecha_validez: "d", responsable_id: "u" },
-  propuesta_lineas: { propuesta_id: "u", bloque: "t", catalogo_item_id: "u", proveedor_id: "u", descripcion: "t", cantidad: "n", precio_unitario: "n", coste_unitario: "n" },
+  propuesta_lineas: { propuesta_id: "u", bloque: "t", catalogo_item_id: "u", proveedor_id: "u", descripcion: "t", cantidad: "n", precio_unitario: "n", coste_unitario: "n", extraordinario: "b" },
   eventos: { nombre: "t", cliente_id: "u", formato_id: "u", categoria_id: "u", fecha: "d", hora_inicio: "h", hora_fin: "h", montaje_inicio: "ts", desmontaje_fin: "ts", aforo: "n", responsable_id: "u", estado: "t", notas_internas: "t" },
   evento_proveedores: { evento_id: "u", proveedor_id: "u", servicio: "t", estado: "t", valoracion: "n" },
   evento_proveedores_costes: { evento_proveedor_id: "u", coste: "n" },

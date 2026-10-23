@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hoyMadrid } from "@/lib/fechas";
-import { ABIERTAS, aprobacionVigente, huellaDe, huellaPropuesta } from "@/lib/propuestas";
+import { ABIERTAS, aprobacionVigente, huellaDe, huellaPropuesta, mismaHuella } from "@/lib/propuestas";
 
 type SB = Awaited<ReturnType<typeof createClient>>;
 const txt = (f: FormData, k: string) => { const v = String(f.get(k) ?? "").trim(); return v === "" ? null : v; };
@@ -54,6 +54,7 @@ export async function anadirLinea(f: FormData) {
     cantidad: n("cantidad", 1),
     precio_unitario: n("precio_unitario", item?.precio),
     coste_unitario: n("coste_unitario", item?.coste),
+    extraordinario: f.get("extraordinario") === "on",
   });
   refrescar(propuestaId);
 }
@@ -73,7 +74,7 @@ export async function enviarPropuesta(f: FormData) {
     const { data: ap } = await supabase.from("aprobaciones").select("estado, detalle").eq("entidad_tipo", "propuesta").eq("entidad_id", id)
       .order("solicitada_en", { ascending: false }).limit(1).maybeSingle();
     const huella = await huellaPropuesta(supabase, id);
-    const cambiada = ap?.estado === "aprobada" && huellaDe(ap.detalle) !== null && huellaDe(ap.detalle) !== huella;
+    const cambiada = ap?.estado === "aprobada" && huellaDe(ap.detalle) !== null && !mismaHuella(huellaDe(ap.detalle), huella);
     if (ap?.estado !== "aprobada" || cambiada) {
       if (ap?.estado !== "pendiente") {
         await supabase.from("aprobaciones").insert({
