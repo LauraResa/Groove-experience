@@ -29,7 +29,7 @@ export default async function Evento({ params, searchParams }: { params: Promise
   if (!e) notFound();
 
   const [{ data: provs }, { data: timeline }, { data: incid }, { data: conts }, { data: fin }, { data: proveedores }, { data: perfiles }, { data: categorias }, { data: clientes }, { data: formatos }] = await Promise.all([
-    supabase.from("evento_proveedores").select("*, proveedores(id, empresa, telefono, categorias_proveedor(nombre))").eq("evento_id", id),
+    supabase.from("evento_proveedores").select("*, proveedores(id, empresa, contacto, telefono, email, categorias_proveedor(nombre))").eq("evento_id", id),
     supabase.from("evento_timeline").select("*").eq("evento_id", id).order("momento"),
     supabase.from("incidencias").select("*").eq("evento_id", id).order("creado_en", { ascending: false }),
     supabase.from("contenidos").select("*, perfiles(nombre)").eq("evento_id", id),
@@ -40,6 +40,11 @@ export default async function Evento({ params, searchParams }: { params: Promise
     supabase.from("clientes").select("id, nombre").order("nombre"),
     supabase.from("formatos").select("id, nombre").order("nombre"),
   ]);
+
+  const { data: costes } = importes && provs?.length
+    ? await supabase.from("evento_proveedores_costes").select("evento_proveedor_id, coste").in("evento_proveedor_id", provs.map((p) => p.id))
+    : { data: [] as { evento_proveedor_id: string; coste: number | null }[] };
+  const costeDe = new Map((costes ?? []).map((c) => [c.evento_proveedor_id, c.coste]));
 
   const cli = e.clientes as { id: string; nombre: string } | null;
   const fmt = e.formatos as { id: string; nombre: string } | null;
@@ -74,37 +79,43 @@ export default async function Evento({ params, searchParams }: { params: Promise
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          {importes && (
-            <Tarjeta titulo="Proveedores" sinPadding>
-              {provs?.length ? (
-                <div className="divide-y divide-stone/40">
-                  {provs.map((p) => {
-                    const pr = p.proveedores as { id: string; empresa: string; telefono: string | null; categorias_proveedor: { nombre: string } | null } | null;
-                    return (
-                      <form key={p.id} action={guardar} className="grid grid-cols-2 items-center gap-2 px-5 py-2.5 md:grid-cols-[1.3fr_1fr_8rem_7rem_auto]">
+          <Tarjeta titulo="Proveedores" sinPadding>
+            {provs?.length ? (
+              <div className="divide-y divide-stone/40">
+                {provs.map((p) => {
+                  const pr = p.proveedores as { id: string; empresa: string; contacto: string | null; telefono: string | null; email: string | null; categorias_proveedor: { nombre: string } | null } | null;
+                  return (
+                    <div key={p.id} className="grid grid-cols-1 items-center gap-2 px-5 py-2.5 md:grid-cols-[1.2fr_1.4fr_auto_auto]">
+                      <div><Link href={`/proveedores/${pr?.id}`} className="text-sm font-medium hover:text-olive">{pr?.empresa}</Link>
+                        <p className="text-[11px] text-espresso/50">{[pr?.categorias_proveedor?.nombre, pr?.contacto, pr?.telefono, pr?.email].filter(Boolean).join(" · ")}</p></div>
+                      <form action={guardar} className="flex gap-2">
                         <Ocultos v={{ _tabla: "evento_proveedores", _id: p.id, _volver: volver }} />
-                        <div><Link href={`/proveedores/${pr?.id}`} className="text-sm font-medium hover:text-olive">{pr?.empresa}</Link>
-                          <p className="text-[11px] text-espresso/50">{pr?.categorias_proveedor?.nombre}{pr?.telefono && ` · ${pr.telefono}`}</p></div>
-                        <input name="servicio" defaultValue={p.servicio ?? ""} disabled={!editar} className={`${campo} py-1.5`} />
-                        <Sel name="estado" valor={p.estado} ops={["pendiente", "confirmado", "pagado"]} className={`${campo} py-1.5`} />
-                        <input name="coste" type="number" step="0.01" defaultValue={p.coste ?? ""} disabled={!editar} className={`${campo} py-1.5`} />
-                        {editar && <div className="flex justify-end gap-1"><button className={botonMini}>✓</button><button formAction={borrar} className={quitar}>×</button></div>}
+                        <input name="servicio" defaultValue={p.servicio ?? ""} disabled={!editar} placeholder="Servicio" className={`${campo} py-1.5`} />
+                        <Sel name="estado" valor={p.estado} ops={["pendiente", "confirmado", "pagado"]} className={`${campo} w-32 py-1.5`} />
+                        {editar && <button className={botonMini}>✓</button>}
                       </form>
-                    );
-                  })}
-                </div>
-              ) : <Vacio>Sin proveedores asignados.</Vacio>}
-              {editar && (
-                <form action={guardar} className="grid grid-cols-2 gap-2 border-t border-stone/60 bg-cream/40 px-5 py-3 md:grid-cols-[1.3fr_1fr_7rem_auto]">
-                  <Ocultos v={{ _tabla: "evento_proveedores", _volver: volver, evento_id: id }} />
-                  <Sel name="proveedor_id" ops={(proveedores ?? []).map((p) => ({ id: p.id, nombre: p.empresa }))} />
-                  <input name="servicio" placeholder="Servicio" className={campo} />
-                  <input name="coste" type="number" step="0.01" placeholder="Coste" className={campo} />
-                  <button className={botonMini}>Añadir</button>
-                </form>
-              )}
-            </Tarjeta>
-          )}
+                      {importes ? (
+                        <form action={guardar} className="flex gap-1">
+                          <Ocultos v={{ _tabla: "evento_proveedores_costes", _volver: volver, evento_proveedor_id: p.id }} />
+                          <input name="coste" type="number" step="0.01" defaultValue={costeDe.get(p.id) ?? ""} disabled={!editar} placeholder="Coste" className={`${campo} w-28 py-1.5`} />
+                          {editar && <button className={botonMini} title="Guardar coste">€</button>}
+                        </form>
+                      ) : <span />}
+                      {editar ? <form action={borrar}><Ocultos v={{ _tabla: "evento_proveedores", _id: p.id, _volver: volver }} /><button className={quitar}>×</button></form> : <span />}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : <Vacio>Sin proveedores asignados.</Vacio>}
+            {editar && (
+              <form action={guardar} className="grid grid-cols-2 gap-2 border-t border-stone/60 bg-cream/40 px-5 py-3 md:grid-cols-[1.3fr_1fr_auto]">
+                <Ocultos v={{ _tabla: "evento_proveedores", _volver: volver, evento_id: id }} />
+                <Sel name="proveedor_id" ops={(proveedores ?? []).map((p) => ({ id: p.id, nombre: p.empresa }))} />
+                <input name="servicio" placeholder="Servicio" className={campo} />
+                <button className={botonMini}>Añadir</button>
+              </form>
+            )}
+          </Tarjeta>
 
           <Tarjeta titulo="Timeline del día">
             {timeline?.length ? (

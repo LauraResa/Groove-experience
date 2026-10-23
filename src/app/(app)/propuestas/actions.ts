@@ -145,32 +145,12 @@ export async function nuevaVersion(f: FormData) {
 export async function convertirEnEvento(f: FormData) {
   const id = String(f.get("id"));
   const supabase = await createClient();
-  const { data: existe } = await supabase.from("eventos").select("id").eq("propuesta_id", id).maybeSingle();
-  if (existe) redirect(`/eventos/${existe.id}`);
-  const { data: p } = await supabase.from("propuestas").select("*, leads(cliente_id, categoria_id)").eq("id", id).single();
-  if (!p) return;
-  if (p.estado !== "aceptada") redirect(`/propuestas/${id}?error=${encodeURIComponent("Solo se convierte en evento una propuesta aceptada.")}`);
-  const lead = p.leads as { cliente_id: string | null; categoria_id: string | null } | null;
-  const { data: ev, error } = await supabase.from("eventos").insert({
-    nombre: p.titulo, propuesta_id: id, lead_id: p.lead_id, cliente_id: lead?.cliente_id, categoria_id: lead?.categoria_id,
-    fecha: p.fecha_evento ?? hoyMadrid(), aforo: p.asistentes, responsable_id: p.responsable_id, estado: "preproduccion",
-  }).select("id").single();
-  if (error || !ev) redirect(`/propuestas/${id}?error=${encodeURIComponent(error?.message ?? "Error")}`);
-
-  const [{ data: tot }, { data: lineas }, { data: espacios }] = await Promise.all([
-    supabase.from("propuesta_totales").select("total, coste").eq("propuesta_id", id).maybeSingle(),
-    supabase.from("propuesta_lineas").select("proveedor_id, descripcion, cantidad, coste_unitario").eq("propuesta_id", id),
-    supabase.from("propuesta_espacios").select("espacio_id").eq("propuesta_id", id),
-  ]);
-  await supabase.from("evento_finanzas").insert({ evento_id: ev.id, facturacion: tot?.total ?? 0, costes: tot?.coste ?? 0 });
-  const conProv = (lineas ?? []).filter((l) => l.proveedor_id);
-  if (conProv.length) await supabase.from("evento_proveedores").insert(conProv.map((l) => ({
-    evento_id: ev.id, proveedor_id: l.proveedor_id, servicio: l.descripcion, coste: Number(l.cantidad) * Number(l.coste_unitario),
-  })));
-  if (espacios?.length) await supabase.from("evento_espacios").insert(espacios.map((e) => ({ evento_id: ev.id, espacio_id: e.espacio_id })));
-  await supabase.from("actividades").insert({ lead_id: p.lead_id, tipo: "cambio_estado", descripcion: `Convertida en evento · ${p.codigo} v${p.version}` });
+  // Función en PostgreSQL: crea evento, finanzas, proveedores, costes y espacios en una sola transacción
+  const { data: eventoId, error } = await supabase.rpc("convertir_propuesta_en_evento", { p_propuesta: id });
+  if (error || !eventoId) redirect(`/propuestas/${id}?error=${encodeURIComponent(error?.message ?? "No se pudo crear el evento")}`);
   revalidatePath("/eventos");
-  redirect(`/eventos/${ev.id}`);
+  revalidatePath(`/propuestas/${id}`);
+  redirect(`/eventos/${eventoId}`);
 }
 
 export async function alternarEspacio(f: FormData) {

@@ -10,12 +10,14 @@ type T = "t" | "n" | "d" | "h" | "ts" | "u" | "b";
 const TABLAS: Record<string, Record<string, T>> = {
   clientes: { tipo: "t", nombre: "t", cif: "t", web: "t", sector: "t", preferencias: "t", notas: "t" },
   contactos: { cliente_id: "u", nombre: "t", cargo: "t", email: "t", telefono: "t", principal: "b" },
-  proveedores: { categoria_id: "u", empresa: "t", contacto: "t", telefono: "t", email: "t", web: "t", servicios: "t", condiciones: "t", tipo: "t", valoracion: "n", notas: "t" },
+  proveedores: { categoria_id: "u", empresa: "t", contacto: "t", telefono: "t", email: "t", web: "t", servicios: "t", tipo: "t", valoracion: "n", notas: "t" },
   catalogo_items: { proveedor_id: "u", nombre: "t", bloque: "t", unidad: "t", precio: "n", coste: "n", condiciones: "t", vigente_desde: "d", vigente_hasta: "d", activo: "b" },
   propuestas: { titulo: "t", fecha_evento: "d", asistentes: "n", descuento_pct: "n", condiciones: "t", fecha_validez: "d", responsable_id: "u" },
   propuesta_lineas: { propuesta_id: "u", bloque: "t", catalogo_item_id: "u", proveedor_id: "u", descripcion: "t", cantidad: "n", precio_unitario: "n", coste_unitario: "n" },
   eventos: { nombre: "t", cliente_id: "u", formato_id: "u", categoria_id: "u", fecha: "d", hora_inicio: "h", hora_fin: "h", montaje_inicio: "ts", desmontaje_fin: "ts", aforo: "n", responsable_id: "u", estado: "t", notas_internas: "t" },
-  evento_proveedores: { evento_id: "u", proveedor_id: "u", servicio: "t", estado: "t", coste: "n", valoracion: "n" },
+  evento_proveedores: { evento_id: "u", proveedor_id: "u", servicio: "t", estado: "t", valoracion: "n" },
+  evento_proveedores_costes: { evento_proveedor_id: "u", coste: "n" },
+  proveedor_condiciones: { proveedor_id: "u", condiciones: "t" },
   evento_timeline: { evento_id: "u", momento: "ts", descripcion: "t", responsable: "t" },
   incidencias: { evento_id: "u", descripcion: "t", gravedad: "t", resuelta: "b" },
   contenidos: { evento_id: "u", formato_id: "u", tipo: "t", necesidad: "t", estado: "t", enlace: "t", responsable_id: "u" },
@@ -62,7 +64,7 @@ export async function guardar(f: FormData) {
 
   let nuevoId: string | null = null;
   let error;
-  if (tabla === "evento_finanzas") {
+  if (["evento_finanzas", "evento_proveedores_costes", "proveedor_condiciones"].includes(tabla)) {
     ({ error } = await supabase.from(tabla).upsert(fila));
   } else if (id) {
     ({ error } = await supabase.from(tabla).update(fila).eq("id", id));

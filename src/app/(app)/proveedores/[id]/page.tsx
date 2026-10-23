@@ -23,11 +23,16 @@ export default async function Proveedor({ params, searchParams }: { params: Prom
 
   const { data: p } = await supabase.from("proveedores").select("*, categorias_proveedor(nombre)").eq("id", id).maybeSingle();
   if (!p) notFound();
-  const [{ data: cats }, { data: items }, { data: usos }] = await Promise.all([
+  const [{ data: cats }, { data: items }, { data: usos }, { data: cond }] = await Promise.all([
     supabase.from("categorias_proveedor").select("id, nombre").order("orden"),
     importes ? supabase.from("catalogo_items").select("*").eq("proveedor_id", id).order("nombre") : Promise.resolve({ data: [] }),
-    importes ? supabase.from("evento_proveedores").select("id, servicio, coste, valoracion, eventos(id, nombre, fecha)").eq("proveedor_id", id) : Promise.resolve({ data: [] }),
+    supabase.from("evento_proveedores").select("id, servicio, valoracion, eventos(id, nombre, fecha)").eq("proveedor_id", id),
+    importes ? supabase.from("proveedor_condiciones").select("condiciones").eq("proveedor_id", id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
+  const { data: costes } = importes && usos?.length
+    ? await supabase.from("evento_proveedores_costes").select("evento_proveedor_id, coste").in("evento_proveedor_id", usos.map((u) => u.id))
+    : { data: [] as { evento_proveedor_id: string; coste: number | null }[] };
+  const costeDe = new Map((costes ?? []).map((c) => [c.evento_proveedor_id, Number(c.coste ?? 0)]));
 
   return (
     <div className="space-y-6 max-w-7xl">
@@ -72,7 +77,7 @@ export default async function Proveedor({ params, searchParams }: { params: Prom
             </Tarjeta>
           )}
 
-          {importes && (
+          {(
             <Tarjeta titulo="Eventos en los que ha trabajado" sinPadding>
               {usos?.length ? (
                 <table className="w-full text-sm"><tbody>
@@ -80,7 +85,7 @@ export default async function Proveedor({ params, searchParams }: { params: Prom
                     <tr key={u.id} className="border-t border-stone/40 first:border-t-0">
                       <td className="px-5 py-2.5 whitespace-nowrap text-espresso/60">{e ? fFecha(e.fecha) : ""}</td>
                       <td className="px-5 py-2.5"><Link href={`/eventos/${e?.id}`} className="hover:text-olive">{e?.nombre}</Link><p className="text-xs text-espresso/55">{u.servicio}</p></td>
-                      <td className="px-5 py-2.5 text-right">{u.coste ? eur(u.coste) : "—"}</td>
+                      {importes && <td className="px-5 py-2.5 text-right">{costeDe.get(u.id) ? eur(costeDe.get(u.id)) : "—"}</td>}
                     </tr>); })}
                 </tbody></table>
               ) : <Vacio>Aún no se ha usado en ningún evento.</Vacio>}
@@ -105,12 +110,21 @@ export default async function Proveedor({ params, searchParams }: { params: Prom
                   <Campo t="Valoración (1-5)"><input name="valoracion" type="number" min="1" max="5" defaultValue={p.valoracion ?? ""} className={campo} /></Campo>
                 </div>
                 <Campo t="Servicios"><textarea name="servicios" rows={2} defaultValue={p.servicios ?? ""} className={campo} /></Campo>
-                {importes && <Campo t="Condiciones / tarifas generales"><textarea name="condiciones" rows={3} defaultValue={p.condiciones ?? ""} className={campo} /></Campo>}
                 <Campo t="Notas"><textarea name="notas" rows={2} defaultValue={p.notas ?? ""} className={campo} /></Campo>
                 {editar && <button className={`${boton} w-full`}>Guardar</button>}
               </fieldset>
             </form>
           </Tarjeta>
+          {importes && (
+            <Tarjeta titulo="Condiciones y tarifas generales">
+              <form action={guardar} className="space-y-2">
+                <Ocultos v={{ _tabla: "proveedor_condiciones", _volver: volver, proveedor_id: id }} />
+                <textarea name="condiciones" rows={4} disabled={!editar} defaultValue={(cond as { condiciones: string | null } | null)?.condiciones ?? ""} placeholder="Forma de pago, mínimos, descuentos acordados…" className={campo} />
+                {editar && <button className={`${boton} w-full`}>Guardar condiciones</button>}
+              </form>
+              <p className="mt-2 text-[11px] text-espresso/50">Solo visible para perfiles con acceso a importes.</p>
+            </Tarjeta>
+          )}
           <DocumentosDe tipo="proveedor" id={id} volver={volver} carpeta="proveedores" />
         </div>
       </div>
