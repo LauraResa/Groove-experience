@@ -5,18 +5,13 @@ import { createClient } from "@/lib/supabase/server";
 import { madridAIso } from "@/lib/fechas";
 import { interpretarTexto, type FilaImportada } from "@/lib/importarFechas";
 
-export type FilaAnalizada = FilaImportada & { solapes: string[]; duplicado: boolean };
+export type FilaAnalizada = FilaImportada & { duplicado: boolean };
 export type Analisis = { filas: FilaAnalizada[]; error?: string } | null;
 
 const TIPOS = ["sesion_groove", "bloqueo", "no_disponible", "montaje", "desmontaje", "otro"];
-const OCUPA = new Set(["evento_confirmado", "formato_propio", "provisional", "posible", "sesion_groove", "bloqueo", "no_disponible"]);
-const solapan = (a1: string, a2: string, b1: string, b2: string) => new Date(a1) < new Date(b2) && new Date(b1) < new Date(a2);
-const horaMadrid = (iso: string) => new Date(iso).toLocaleTimeString("es-ES", { timeZone: "Europe/Madrid", hour: "2-digit", minute: "2-digit" });
-/** Lo que ocupa el día entero no cuenta como solape */
-const diaEntero = (ini: string, fin: string) => (horaMadrid(ini) === "00:00" && horaMadrid(fin) === "00:00") || /T00:00:00(\.000)?(Z|\+00(:00)?)$/.test(ini);
 const dia = (iso: string) => new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Madrid" });
 
-/** Paso 1: interpreta el texto y avisa de solapes y duplicados. No guarda nada. */
+/** Paso 1: interpreta el texto y avisa de duplicados. No guarda nada. */
 export async function analizarFechas(_: Analisis, f: FormData): Promise<Analisis> {
   const texto = String(f.get("texto") ?? "");
   if (!texto.trim()) return { filas: [], error: "Pega al menos una línea con fecha." };
@@ -36,14 +31,10 @@ export async function analizarFechas(_: Analisis, f: FormData): Promise<Analisis
     existentes = data ?? [];
   }
   return {
-    filas: filas.map((r, i) => {
-      if (!r.inicio || !r.fin) return { ...r, solapes: [], duplicado: false };
-      const solapes = r.todoElDia ? [] : [
-        ...existentes.filter((e) => OCUPA.has(e.estilo) && !diaEntero(e.inicio, e.fin) && solapan(r.inicio!, r.fin!, e.inicio, e.fin)).map((e) => e.titulo),
-        ...filas.filter((o, j) => j !== i && o.inicio && o.fin && !o.todoElDia && solapan(r.inicio!, r.fin!, o.inicio, o.fin)).map((o) => `${o.titulo} (línea ${o.linea})`),
-      ];
+    filas: filas.map((r) => {
+      if (!r.inicio || !r.fin) return { ...r, duplicado: false };
       const duplicado = existentes.some((e) => e.capa === "bloque" && e.titulo.trim().toLowerCase() === r.titulo.trim().toLowerCase() && dia(e.inicio) === dia(r.inicio!));
-      return { ...r, solapes, duplicado };
+      return { ...r, duplicado };
     }),
   };
 }

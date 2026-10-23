@@ -39,7 +39,6 @@ export function ImportarFechas() {
   const cuenta = {
     confirmadas: marcadas.filter((r) => !r.posible).length,
     posibles: marcadas.filter((r) => r.posible).length,
-    solapes: filas.filter((r) => r.solapes.length).length,
     errores: filas.filter((r) => r.error).length,
   };
   const hecho = res?.startsWith("ok:");
@@ -84,7 +83,6 @@ export function ImportarFechas() {
                     <div className="flex flex-wrap gap-2 text-xs">
                       <span className="rounded-full bg-olive/15 px-2.5 py-1 text-olive-deep">{cuenta.confirmadas} confirmadas</span>
                       <span className="rounded-full border border-dashed border-olive px-2.5 py-1 text-olive-deep">{cuenta.posibles} posibles</span>
-                      {cuenta.solapes > 0 && <span className="rounded-full bg-bronze/20 px-2.5 py-1 text-bronze">⚠ {cuenta.solapes} con solape</span>}
                       {cuenta.errores > 0 && <span className="rounded-full bg-red-800/10 px-2.5 py-1 text-red-800">{cuenta.errores} sin entender</span>}
                     </div>
                     <div className="tarjeta overflow-x-auto">
@@ -116,7 +114,6 @@ export function ImportarFechas() {
                               <td className="px-3 py-2 text-xs space-y-0.5">
                                 {r.error && <p className="text-red-800">{r.error}</p>}
                                 {r.duplicado && <p className="text-bronze">Ya existe en el calendario</p>}
-                                {r.solapes.length > 0 && <p className="text-bronze">⚠ Coincide con: {r.solapes.slice(0, 3).join(", ")}{r.solapes.length > 3 ? "…" : ""}</p>}
                                 {r.avisos.map((a) => <p key={a} className="text-espresso/55">{a}</p>)}
                               </td>
                             </tr>
