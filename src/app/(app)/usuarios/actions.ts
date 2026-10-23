@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSesion } from "@/lib/sesion";
+import { headers } from "next/headers";
+import { clienteAdmin } from "@/lib/supabase/admin";
 
 const txt = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
 
@@ -13,18 +15,41 @@ async function soloSuperadmin() {
   return createClient();
 }
 
-export async function crearUsuario(_: string | null, f: FormData) {
+const SIN_CLAVE = "Falta configurar la clave de servidor de Supabase (SUPABASE_SECRET_KEY) en Vercel.";
+
+async function urlBienvenida() {
+  const h = await headers();
+  return `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host")}/auth/bienvenida`;
+}
+
+/** Alta por invitación: Supabase envía el email y cada persona crea su propia contraseña */
+export async function invitarUsuario(_: string | null, f: FormData) {
   const supabase = await soloSuperadmin();
-  const { error } = await supabase.rpc("admin_crear_usuario", {
-    p_email: txt(f, "email"),
-    p_password: txt(f, "password"),
-    p_nombre: txt(f, "nombre"),
-    p_rol_clave: txt(f, "rol"),
-    p_superadmin: f.get("superadmin") === "on",
+  const admin = clienteAdmin();
+  if (!admin) return SIN_CLAVE;
+  const email = txt(f, "email").toLowerCase();
+  const nombre = txt(f, "nombre");
+  if (!email || !nombre) return "Nombre y email son obligatorios.";
+
+  // Rol previsto: se asigna solo en cuanto exista el usuario (trigger crear_perfil)
+  const { error: e1 } = await supabase.from("usuarios_previstos").upsert({
+    email, nombre, rol_clave: txt(f, "rol"), superadmin: f.get("superadmin") === "on",
   });
-  if (error) return error.message;
+  if (e1) return e1.message;
+
+  const { error } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo: await urlBienvenida(), data: { nombre } });
+  if (error) return /already|registered|exists/i.test(error.message) ? "Ya existe un usuario con ese email. Usa «Enviar acceso» en su fila." : error.message;
   revalidatePath("/usuarios");
   return "ok";
+}
+
+/** Envía a la persona un email para crear o restablecer su contraseña (no la elige la superadmin) */
+export async function enviarAcceso(_: string | null, f: FormData) {
+  await soloSuperadmin();
+  const admin = clienteAdmin();
+  if (!admin) return SIN_CLAVE;
+  const { error } = await admin.auth.resetPasswordForEmail(txt(f, "email"), { redirectTo: await urlBienvenida() });
+  return error ? error.message : "ok";
 }
 
 export async function actualizarUsuario(f: FormData) {
@@ -36,12 +61,6 @@ export async function actualizarUsuario(f: FormData) {
     activo: f.get("activo") === "on",
   }).eq("id", txt(f, "id"));
   revalidatePath("/usuarios");
-}
-
-export async function cambiarPasswordDe(_: string | null, f: FormData) {
-  const supabase = await soloSuperadmin();
-  const { error } = await supabase.rpc("admin_cambiar_password", { p_usuario: txt(f, "id"), p_password: txt(f, "password") });
-  return error ? error.message : "ok";
 }
 
 export async function alternarPermiso(f: FormData) {

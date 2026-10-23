@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSesion } from "@/lib/sesion";
 import { ACCIONES, AREAS, MODULOS } from "@/lib/modulos";
 import { actualizarUsuario, alternarPermiso, borrarRol, crearRol, guardarRol } from "./actions";
-import { CambiarPassword, NuevoUsuario } from "./Formularios";
+import { EnviarAcceso, NuevoUsuario } from "./Formularios";
 
 const campo = "rounded-lg border border-stone bg-cream/80 px-3 py-2 text-sm outline-none focus:border-olive";
 const boton = "rounded-lg bg-olive px-3.5 py-2 text-xs text-cream hover:bg-olive-deep transition";
@@ -230,7 +230,7 @@ function FilaUsuario({ p, roles, ve }: { p: Perfil; roles: { id: string; nombre:
               : <p className="text-xs text-espresso/50">No ve ninguna pantalla.</p>}
           </div>
         </details>
-        <CambiarPassword id={p.id} />
+        <EnviarAcceso email={p.email} />
         <button form={`u-${p.id}`} className={boton}>Guardar</button>
       </div>
     </div>
