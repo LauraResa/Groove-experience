@@ -7,12 +7,14 @@ import { fHora, hoyMadrid } from "@/lib/fechas";
 import { Cabecera, Campo, Ocultos, Sel, Tarjeta, Vacio, boton, campo } from "@/components/ui";
 import { Cajon } from "@/components/Cajon";
 import { Icono } from "../Icono";
+import { ImportarFechas } from "./ImportarFechas";
 
 type Item = { capa: string; id: string; titulo: string; inicio: string; fin: string; estilo: string };
 
 const ESTILO: Record<string, { t: string; chip: string; punto: string }> = {
   evento_confirmado: { t: "Evento", chip: "bg-olive text-cream", punto: "bg-olive" },
   formato_propio: { t: "Formato propio", chip: "bg-bronze text-cream", punto: "bg-bronze" },
+  posible: { t: "Posible (sin confirmar)", chip: "border border-dashed border-olive bg-cream text-olive-deep", punto: "border border-dashed border-olive" },
   provisional: { t: "Propuesta / provisional", chip: "border border-dashed border-bronze bg-sand/70 text-espresso", punto: "border border-dashed border-bronze" },
   reunion: { t: "Reunión / visita", chip: "border border-olive/60 bg-cream text-olive-deep", punto: "border border-olive" },
   sesion_groove: { t: "Sesión Groove", chip: "bg-espresso text-cream", punto: "bg-espresso" },
@@ -43,7 +45,9 @@ function dias(it: Item) {
 }
 const sumar = (ymd: string, n: number) => { const d = new Date(`${ymd}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const lunes = (ymd: string) => { const d = new Date(`${ymd}T12:00:00Z`); return sumar(ymd, -((d.getUTCDay() + 6) % 7)); };
-const OCUPA = new Set(["evento_confirmado", "formato_propio", "provisional", "sesion_groove", "bloqueo", "no_disponible"]);
+/** Bloque de día completo en hora de Madrid (00:00 → 00:00) */
+const diaEntero = (i: Item) => fHora(i.inicio) === "00:00" && fHora(i.fin) === "00:00";
+const OCUPA = new Set(["evento_confirmado", "formato_propio", "provisional", "posible", "sesion_groove", "bloqueo", "no_disponible"]);
 
 export default async function Calendario({ searchParams }: { searchParams: Promise<{ d?: string; vista?: string; tipo?: string }> }) {
   const s = await getSesion();
@@ -99,8 +103,8 @@ export default async function Calendario({ searchParams }: { searchParams: Promi
   const Chip = ({ i, largo }: { i: Item; largo?: boolean }) => {
     const e = ESTILO[i.estilo] ?? ESTILO.otro;
     const h = href(i);
-    const hora = soloFecha(i.inicio) ? "" : `${fHora(i.inicio)} `;
-    const cont = <span className={`block truncate rounded px-1.5 py-0.5 text-[11px] leading-tight ${e.chip}`}>{solapa.has(i.id) && "⚠ "}{hora}{i.titulo}{largo && !soloFecha(i.fin) ? ` – ${fHora(i.fin)}` : ""}</span>;
+    const hora = soloFecha(i.inicio) || diaEntero(i) ? "" : `${fHora(i.inicio)} `;
+    const cont = <span className={`block truncate rounded px-1.5 py-0.5 text-[11px] leading-tight ${e.chip}`}>{solapa.has(i.id) && "⚠ "}{i.estilo === "posible" && "¿"}{hora}{i.titulo}{i.estilo === "posible" && "?"}{largo && !soloFecha(i.fin) ? ` – ${fHora(i.fin)}` : ""}</span>;
     return h ? <Link href={h} title={i.titulo}>{cont}</Link> : <span title={i.titulo}>{cont}</span>;
   };
 
@@ -122,6 +126,7 @@ export default async function Calendario({ searchParams }: { searchParams: Promi
             </form>
           </Cajon>
         )}
+        {crear && <ImportarFechas />}
         {crear && (
           <Cajon boton={<><Icono n="mas" className="h-4 w-4" />Sesión / bloqueo</>} titulo="Sesión Groove, bloqueo o fecha no disponible">
             <form action={guardar} className="space-y-3">
@@ -158,7 +163,7 @@ export default async function Calendario({ searchParams }: { searchParams: Promi
             <div className="divide-y divide-stone/40">
               {(porDia.get(ref) ?? []).length ? (porDia.get(ref) ?? []).map((i) => (
                 <div key={`${i.capa}${i.id}`} className="flex items-center gap-3 px-5 py-3 text-sm">
-                  <span className="w-28 shrink-0 text-xs text-espresso/60">{soloFecha(i.inicio) ? "Todo el día" : `${fHora(i.inicio)} – ${fHora(i.fin)}`}</span>
+                  <span className="w-28 shrink-0 text-xs text-espresso/60">{soloFecha(i.inicio) || diaEntero(i) ? "Todo el día" : `${fHora(i.inicio)} – ${fHora(i.fin)}`}</span>
                   <div className="flex-1"><Chip i={i} /></div>
                   <span className="text-xs text-espresso/55">{(ESTILO[i.estilo] ?? ESTILO.otro).t}</span>
                 </div>
@@ -188,7 +193,7 @@ export default async function Calendario({ searchParams }: { searchParams: Promi
           )}
 
           <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-stone/50 px-4 py-3 text-[11px] text-espresso/60">
-            {["evento_confirmado", "formato_propio", "provisional", "reunion", "sesion_groove", "bloqueo", "hito"].map((k) => (
+            {["evento_confirmado", "formato_propio", "provisional", "posible", "reunion", "sesion_groove", "bloqueo", "hito"].map((k) => (
               <span key={k} className="flex items-center gap-1.5"><span className={`h-2.5 w-2.5 rounded-sm ${ESTILO[k].punto}`} />{ESTILO[k].t}</span>
             ))}
             {solapa.size > 0 && <span className="text-bronze">⚠ Solape de ocupación</span>}
@@ -216,7 +221,7 @@ export default async function Calendario({ searchParams }: { searchParams: Promi
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{solapa.has(i.id) && <span className="text-bronze">⚠ </span>}{i.titulo}</p>
-                      <p className="text-xs text-espresso/55">{e.t}{!soloFecha(i.inicio) && ` · ${fHora(i.inicio)}`}</p>
+                      <p className="text-xs text-espresso/55">{e.t}{!soloFecha(i.inicio) && !diaEntero(i) && ` · ${fHora(i.inicio)}`}</p>
                     </div>
                     {i.capa === "bloque" && crear && (
                       <form action={borrar}><Ocultos v={{ _tabla: "calendario_bloques", _id: i.id, _volver: "/calendario" }} /><button className="text-xs text-espresso/40 hover:text-red-800" title="Quitar">×</button></form>
