@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getSesion, puede } from "@/lib/sesion";
 import { borrar, guardar } from "@/lib/crud";
@@ -8,6 +9,7 @@ import { Cabecera, Campo, Ocultos, Sel, Tarjeta, Vacio, boton, campo } from "@/c
 import { Cajon } from "@/components/Cajon";
 import { Icono } from "../Icono";
 import { ImportarFechas } from "./ImportarFechas";
+import { AvisosSolape } from "./AvisosSolape";
 
 type Item = { capa: string; id: string; titulo: string; inicio: string; fin: string; estilo: string };
 
@@ -58,6 +60,7 @@ export default async function Calendario({ searchParams }: { searchParams: Promi
   const hoy = hoyMadrid();
   const ref = /^\d{4}-\d{2}-\d{2}$/.test(sp.d ?? "") ? sp.d! : hoy;
   const crear = puede(s, "calendario", "crear");
+  const avisos = (await cookies()).get("cal_avisos")?.value !== "0";
   const reunion = puede(s, "leads", "crear");
 
   // rango visible
@@ -77,9 +80,11 @@ export default async function Calendario({ searchParams }: { searchParams: Promi
 
   // solapes entre elementos que ocupan el venue
   const ocupan = todos.filter((i) => OCUPA.has(i.estilo));
+  // Solo cuenta como solape coincidir en franja horaria; lo de "todo el día" no se marca
+  const conHora = ocupan.filter((i) => !soloFecha(i.inicio) && !diaEntero(i));
   const solapa = new Set<string>();
-  for (let a = 0; a < ocupan.length; a++) for (let b = a + 1; b < ocupan.length; b++) {
-    const x = ocupan[a], y = ocupan[b];
+  if (avisos) for (let a = 0; a < conHora.length; a++) for (let b = a + 1; b < conHora.length; b++) {
+    const x = conHora[a], y = conHora[b];
     if (new Date(x.inicio) < new Date(y.fin) && new Date(y.inicio) < new Date(x.fin)) { solapa.add(x.id); solapa.add(y.id); }
   }
 
@@ -196,7 +201,7 @@ export default async function Calendario({ searchParams }: { searchParams: Promi
             {["evento_confirmado", "formato_propio", "provisional", "posible", "reunion", "sesion_groove", "bloqueo", "hito"].map((k) => (
               <span key={k} className="flex items-center gap-1.5"><span className={`h-2.5 w-2.5 rounded-sm ${ESTILO[k].punto}`} />{ESTILO[k].t}</span>
             ))}
-            {solapa.size > 0 && <span className="text-bronze">⚠ Solape de ocupación</span>}
+            <span className="ml-auto"><AvisosSolape activos={avisos} cuantos={solapa.size} /></span>
           </div>
         </section>
 
