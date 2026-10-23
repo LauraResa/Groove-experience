@@ -56,7 +56,7 @@ export default async function Documentos({ searchParams }: { searchParams: Promi
                     <p className="text-xs text-espresso/55">{CARPETAS[d.carpeta]} · {fFecha(d.subido_en)} · {(d.perfiles as unknown as { nombre: string } | null)?.nombre}
                       {v.map((x) => RUTA[x.entidad_tipo] && <a key={x.entidad_id} href={`${RUTA[x.entidad_tipo]}${x.entidad_id}`} className="ml-2 text-olive hover:text-bronze">{x.entidad_tipo} →</a>)}</p>
                   </div>
-                  {puede(s, "documentos", "borrar") && <form action={borrar}><Ocultos v={{ _tabla: "documentos", _id: d.id, _volver: "/documentos" }} /><button className="text-xs text-espresso/40 hover:text-red-800" title="Quitar">×</button></form>}
+                  {puede(s, "documentos", "borrar") && <form action={borrar} data-confirmar><Ocultos v={{ _tabla: "documentos", _id: d.id, _volver: "/documentos" }} /><button className="text-xs text-espresso/40 hover:text-red-800" title="Quitar">×</button></form>}
                 </li>
               );
             })}

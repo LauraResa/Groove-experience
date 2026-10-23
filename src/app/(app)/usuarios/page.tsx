@@ -107,7 +107,7 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
                   </label>
                   <button className={boton}>Guardar nombre</button>
                   {ps.every((p) => p.rol_id !== sel.id) && (
-                    <button formAction={borrarRol} className="rounded-lg border border-stone px-3.5 py-2 text-xs text-espresso/60 hover:border-red-800 hover:text-red-800">Borrar perfil</button>
+                    <button data-confirmar formAction={borrarRol} className="rounded-lg border border-stone px-3.5 py-2 text-xs text-espresso/60 hover:border-red-800 hover:text-red-800">Borrar perfil</button>
                   )}
                 </div>
                 <input name="descripcion" defaultValue={sel.descripcion ?? ""} key={`d-${sel.id}`} placeholder="Descripción: para quién es este perfil" className={`${campo} w-full`} />

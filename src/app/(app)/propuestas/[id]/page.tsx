@@ -149,7 +149,7 @@ export default async function Propuesta({ params, searchParams }: { params: Prom
                     {editar && !cerrada && (
                       <div className="flex gap-1 justify-end">
                         <button className={botonMini} title="Guardar">✓</button>
-                        <button formAction={borrar} className="rounded-md border border-stone px-2 py-1 text-xs text-espresso/55 hover:border-red-800 hover:text-red-800" title="Quitar">×</button>
+                        <button data-confirmar formAction={borrar} className="rounded-md border border-stone px-2 py-1 text-xs text-espresso/55 hover:border-red-800 hover:text-red-800" title="Quitar">×</button>
                       </div>
                     )}
                   </form>

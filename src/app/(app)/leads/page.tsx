@@ -5,15 +5,15 @@ import { getSesion, puede } from "@/lib/sesion";
 import { moverLead } from "./actions";
 import { NuevoLead } from "./NuevoLead";
 import { fFecha, hoyMadrid } from "@/lib/fechas";
-import { Filtros } from "@/components/ui";
+import { Aviso, Filtros } from "@/components/ui";
 
 const eur = (n: number) => n.toLocaleString("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 const PRIORIDAD: Record<string, string> = {
   baja: "bg-stone/60", media: "bg-sand", alta: "bg-bronze/30", urgente: "bg-bronze text-cream",
 };
 
-export default async function Leads({ searchParams }: { searchParams: Promise<{ nuevo?: string; f?: string }> }) {
-  const { nuevo, f = "" } = await searchParams;
+export default async function Leads({ searchParams }: { searchParams: Promise<{ nuevo?: string; f?: string; error?: string }> }) {
+  const { nuevo, f = "", error } = await searchParams;
   const hoy = hoyMadrid();
   const hace2 = new Date(new Date(`${hoy}T12:00:00Z`).getTime() - 2 * 864e5).toISOString().slice(0, 10);
   const s = await getSesion();
@@ -64,6 +64,7 @@ export default async function Leads({ searchParams }: { searchParams: Promise<{ 
         )}
       </header>
 
+      <Aviso error={error} />
       <Filtros base="/leads" actual={f} ops={[
         { v: "", t: "Todos", n: todos.length },
         { v: "vencidas", t: "Acción vencida", n: cuenta("vencida") },

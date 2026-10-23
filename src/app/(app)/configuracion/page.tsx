@@ -177,7 +177,7 @@ export default async function Configuracion({ searchParams }: { searchParams: Pr
                 <input name="nombre" required defaultValue={e?.nombre ?? ""} placeholder="Añadir espacio…" className={campo} />
                 <input name="aforo" type="number" min="0" defaultValue={e?.aforo ?? ""} placeholder="Aforo" className={campo} />
                 <button className={boton}>{e ? "Guardar" : "Añadir"}</button>
-                {e ? <button formAction={borrarFila} formNoValidate className="rounded-lg border border-stone px-2.5 py-1.5 text-xs text-espresso/60 hover:text-red-800">Quitar</button> : <span />}
+                {e ? <button data-confirmar formAction={borrarFila} formNoValidate className="rounded-lg border border-stone px-2.5 py-1.5 text-xs text-espresso/60 hover:text-red-800">Quitar</button> : <span />}
               </form>
             ))}
           </div>

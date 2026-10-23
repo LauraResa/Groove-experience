@@ -3,6 +3,7 @@ import { getSesion, puede } from "@/lib/sesion";
 import { MODULOS } from "@/lib/modulos";
 import { logout } from "@/app/login/actions";
 import { Sidebar } from "./Sidebar";
+import { ConfirmarBorrados } from "@/components/ConfirmarBorrados";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const s = await getSesion();
@@ -21,6 +22,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </form>
         </div>
       } />
+      <ConfirmarBorrados />
       <main className="flex-1 min-w-0 px-4 py-6 md:px-10 md:py-10">
         {s.rol ? children : (
           <div className="max-w-md tarjeta aparecer p-6">

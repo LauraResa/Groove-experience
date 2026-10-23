@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { madridAIso } from "@/lib/fechas";
 
@@ -59,7 +60,8 @@ export async function crearLead(_: string | null, f: FormData) {
 
 export async function moverLead(f: FormData) {
   const supabase = await createClient();
-  await supabase.from("leads").update({ estado_id: txt(f, "estado_id") }).eq("id", txt(f, "id"));
+  const { error } = await supabase.from("leads").update({ estado_id: txt(f, "estado_id") }).eq("id", txt(f, "id"));
+  if (error) redirect(`/leads?error=${encodeURIComponent("No se pudo mover el lead: " + error.message)}`);
   revalidatePath("/leads");
   revalidatePath("/");
 }

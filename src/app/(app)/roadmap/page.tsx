@@ -56,7 +56,7 @@ export default async function Roadmap({ searchParams }: { searchParams: Promise<
           <button className={botonMini}>✓</button>
         </form>
       ) : <Insignia tono={TONO[i.estado]}>{EST_TAREA[i.estado]}</Insignia>}
-      {editar && <form action={borrar}><Ocultos v={{ _tabla: "roadmap_items", _id: i.id, _volver: volver }} /><button className="text-xs text-espresso/40 hover:text-red-800" title="Quitar">×</button></form>}
+      {editar && <form action={borrar} data-confirmar><Ocultos v={{ _tabla: "roadmap_items", _id: i.id, _volver: volver }} /><button className="text-xs text-espresso/40 hover:text-red-800" title="Quitar">×</button></form>}
     </li>
   );
 

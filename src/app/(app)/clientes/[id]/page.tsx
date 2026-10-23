@@ -54,7 +54,7 @@ export default async function Cliente({ params, searchParams }: { params: Promis
                   <input name="email" defaultValue={k.email ?? ""} placeholder="Email" disabled={!editar} className={`${campo} py-1.5`} />
                   <input name="telefono" defaultValue={k.telefono ?? ""} placeholder="Teléfono" disabled={!editar} className={`${campo} py-1.5`} />
                   <Check name="principal" t="Principal" valor={k.principal} />
-                  {editar && <div className="flex gap-1"><button className={botonMini}>✓</button><button formAction={borrar} className="rounded-md border border-stone px-2 py-1 text-xs text-espresso/55 hover:text-red-800">×</button></div>}
+                  {editar && <div className="flex gap-1"><button className={botonMini}>✓</button><button data-confirmar formAction={borrar} className="rounded-md border border-stone px-2 py-1 text-xs text-espresso/55 hover:text-red-800">×</button></div>}
                 </form>
               ))}
             </div>

@@ -218,7 +218,7 @@ export default async function Calendario({ searchParams }: { searchParams: Promi
                       <p className="text-xs text-espresso/55">{e.t}{!soloFecha(i.inicio) && !diaEntero(i) && ` · ${fHora(i.inicio)}`}</p>
                     </div>
                     {i.capa === "bloque" && crear && (
-                      <form action={borrar}><Ocultos v={{ _tabla: "calendario_bloques", _id: i.id, _volver: "/calendario" }} /><button className="text-xs text-espresso/40 hover:text-red-800" title="Quitar">×</button></form>
+                      <form action={borrar} data-confirmar><Ocultos v={{ _tabla: "calendario_bloques", _id: i.id, _volver: "/calendario" }} /><button className="text-xs text-espresso/40 hover:text-red-800" title="Quitar">×</button></form>
                     )}
                   </div>
                 );

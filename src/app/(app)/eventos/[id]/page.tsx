@@ -71,9 +71,9 @@ export default async function Evento({ params, searchParams }: { params: Promise
       {importes && (
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Kpi destacado label="Facturación" valor={eur(Number(fin?.facturacion ?? 0) + Number(fin?.extras ?? 0))} sub={fin?.extras ? `Incluye ${eur(fin.extras)} de extras` : undefined} />
-          <Kpi label="Costes" valor={eur(fin?.costes)} sub={fin ? `Margen ${eur(Number(fin.facturacion) + Number(fin.extras) - Number(fin.costes))}` : undefined} />
+          <Kpi label="Costes" valor={eur(fin?.costes)} />
           <Kpi label="Cobrado" valor={eur(fin?.cobrado)} sub={`Pendiente ${eur(fin?.pendiente)}`} />
-          <Kpi label="Variable estimado" valor={eur(fin?.variable_estimado)} sub="Se edita en Finanzas" />
+          <Kpi label="Margen" valor={eur(Number(fin?.facturacion ?? 0) + Number(fin?.extras ?? 0) - Number(fin?.costes ?? 0))} sub="Facturación − costes" />
         </section>
       )}
 
@@ -101,7 +101,7 @@ export default async function Evento({ params, searchParams }: { params: Promise
                           {editar && <button className={botonMini} title="Guardar coste">€</button>}
                         </form>
                       ) : <span />}
-                      {editar ? <form action={borrar}><Ocultos v={{ _tabla: "evento_proveedores", _id: p.id, _volver: volver }} /><button className={quitar}>×</button></form> : <span />}
+                      {editar ? <form action={borrar} data-confirmar><Ocultos v={{ _tabla: "evento_proveedores", _id: p.id, _volver: volver }} /><button className={quitar}>×</button></form> : <span />}
                     </div>
                   );
                 })}
@@ -124,7 +124,7 @@ export default async function Evento({ params, searchParams }: { params: Promise
                   <li key={t.id} className="flex items-start gap-3 text-sm">
                     <span className="w-24 shrink-0 font-medium text-olive">{fFechaHora(t.momento)}</span>
                     <span className="flex-1">{t.descripcion}{t.responsable && <span className="text-espresso/50"> · {t.responsable}</span>}</span>
-                    {editar && <form action={borrar}><Ocultos v={{ _tabla: "evento_timeline", _id: t.id, _volver: volver }} /><button className={quitar}>×</button></form>}
+                    {editar && <form action={borrar} data-confirmar><Ocultos v={{ _tabla: "evento_timeline", _id: t.id, _volver: volver }} /><button className={quitar}>×</button></form>}
                   </li>
                 ))}
               </ol>

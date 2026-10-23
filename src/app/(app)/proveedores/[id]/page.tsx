@@ -57,7 +57,7 @@ export default async function Proveedor({ params, searchParams }: { params: Prom
                       <input name="coste" type="number" step="0.01" defaultValue={i.coste ?? ""} title="Coste" disabled={!editar} className={`${campo} py-1.5`} />
                       <input name="unidad" defaultValue={i.unidad} title="Unidad" disabled={!editar} className={`${campo} py-1.5`} />
                       <Check name="activo" t="Activo" valor={i.activo} />
-                      {editar && <div className="flex gap-1"><button className={botonMini}>✓</button><button formAction={borrar} className="rounded-md border border-stone px-2 py-1 text-xs text-espresso/55 hover:text-red-800">×</button></div>}
+                      {editar && <div className="flex gap-1"><button className={botonMini}>✓</button><button data-confirmar formAction={borrar} className="rounded-md border border-stone px-2 py-1 text-xs text-espresso/55 hover:text-red-800">×</button></div>}
                     </form>
                   ))}
                 </div>
