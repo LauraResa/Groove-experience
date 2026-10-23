@@ -66,7 +66,10 @@ export default async function Calendario({ searchParams }: { searchParams: Promi
   // rango visible
   const primeroMes = `${ref.slice(0, 7)}-01`;
   const desde = vista === "mes" ? lunes(primeroMes) : vista === "semana" ? lunes(ref) : ref;
-  const ndias = vista === "mes" ? 42 : vista === "semana" ? 7 : 1;
+  // mes: solo las semanas que tocan el mes (4, 5 o 6)
+  const finMes = (() => { const d = new Date(`${primeroMes}T12:00:00Z`); d.setUTCMonth(d.getUTCMonth() + 1, 0); return d.toISOString().slice(0, 10); })();
+  const semanasMes = Math.ceil((Math.round((new Date(`${finMes}T12:00:00Z`).getTime() - new Date(`${lunes(primeroMes)}T12:00:00Z`).getTime()) / 864e5) + 1) / 7);
+  const ndias = vista === "mes" ? semanasMes * 7 : vista === "semana" ? 7 : 1;
   const hasta = sumar(desde, ndias);
 
   const supabase = await createClient();
