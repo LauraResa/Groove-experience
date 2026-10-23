@@ -19,14 +19,21 @@ export default async function Roadmap({ searchParams }: { searchParams: Promise<
   const { vista = "semanas" } = await searchParams;
   const editar = puede(s, "roadmap", "editar");
   const supabase = await createClient();
-  const [{ data }, { data: perfiles }] = await Promise.all([
+  const [{ data }, { data: altas }, { data: perfiles }] = await Promise.all([
     supabase.from("roadmap_items").select("*").order("semana", { nullsFirst: false }).order("prioridad", { ascending: false }),
+    supabase.from("actividad_log").select("entidad_id, creado_en").eq("entidad_tipo", "roadmap").eq("accion", "insert"),
     supabase.from("perfiles").select("id, nombre").not("rol_id", "is", null),
   ]);
   const items = (data ?? []) as R[];
   const nombre = new Map((perfiles ?? []).map((p) => [p.id, p.nombre]));
   const titulo = new Map(items.map((i) => [i.id, i.titulo]));
   const hechos = items.filter((i) => i.estado === "finalizado").length;
+  const registrado = new Map((altas ?? []).map((a) => [a.entidad_id, a.creado_en as string]));
+  const hito = items.find((i) => i.area === "Hito" && i.titulo.startsWith("Inicio operativo"));
+  const f = (d: string) => fFecha(d, { day: "2-digit", month: "2-digit", year: "numeric" });
+  /** Fechas del trabajo: "22/10/2026" o "del 22/10/2026 al 23/10/2026" */
+  const periodo = (i: R) => i.fecha_inicio && i.fecha_limite && i.fecha_inicio !== i.fecha_limite
+    ? `del ${f(i.fecha_inicio)} al ${f(i.fecha_limite)}` : i.fecha_limite || i.fecha_inicio ? f((i.fecha_limite || i.fecha_inicio)!) : null;
   const volver = `/roadmap?vista=${vista}`;
 
   const agrupar = (clave: (i: R) => string) => {
@@ -43,7 +50,7 @@ export default async function Roadmap({ searchParams }: { searchParams: Promise<
       <div className="min-w-0">
         <p className="font-medium">{i.titulo}</p>
         <p className="text-xs text-espresso/55">
-          {[i.objetivo, i.area, i.semana && `S${i.semana}`, i.fecha_limite && `límite ${fFecha(i.fecha_limite, { day: "numeric", month: "short" })}`].filter(Boolean).join(" · ")}
+          {[i.objetivo, i.area, i.semana && `S${i.semana}`, i.fecha_limite && `${i.estado === "finalizado" ? "realizado" : "límite"} ${fFecha(i.fecha_limite, { day: "numeric", month: "short" })}`].filter(Boolean).join(" · ")}
           {i.depende_de_id && <span className="text-bronze"> · depende de «{titulo.get(i.depende_de_id)}»</span>}
         </p>
         {i.resultado_esperado && <p className="mt-0.5 text-xs italic text-espresso/55">→ {i.resultado_esperado}</p>}
@@ -87,9 +94,47 @@ export default async function Roadmap({ searchParams }: { searchParams: Promise<
         )}
       </Cabecera>
 
-      <Filtros base="/roadmap" actual={vista} param="vista" ops={[{ v: "semanas", t: "Por semanas" }, { v: "timeline", t: "Timeline" }, { v: "responsable", t: "Por responsable" }, { v: "area", t: "Por área" }]} />
+      {hito?.fecha_inicio && (
+        <div className="tarjeta aparecer flex flex-wrap items-baseline gap-x-3 gap-y-1 border-olive/40 px-5 py-4">
+          <p className="font-serif text-lg">Inicio operativo del proyecto: <b className="font-semibold">{f(hito.fecha_inicio)}</b></p>
+          <p className="text-sm text-espresso/60">Contrato pendiente de firma.</p>
+        </div>
+      )}
 
-      {!items.length ? <Tarjeta><Vacio>El roadmap está vacío. Añade las acciones de las 12 semanas.</Vacio></Tarjeta> : vista === "timeline" ? (
+      <Filtros base="/roadmap" actual={vista} param="vista" ops={[{ v: "historico", t: "Histórico" }, { v: "semanas", t: "Por semanas" }, { v: "timeline", t: "Timeline" }, { v: "responsable", t: "Por responsable" }, { v: "area", t: "Por área" }]} />
+
+      {!items.length ? <Tarjeta><Vacio>El roadmap está vacío. Añade las acciones de las 12 semanas.</Vacio></Tarjeta> : vista === "historico" ? (
+        <div className="space-y-4">
+          {[
+            { t: "Realizado", l: items.filter((i) => i.estado === "finalizado").sort((a, b) => (a.fecha_limite ?? a.fecha_inicio ?? "").localeCompare(b.fecha_limite ?? b.fecha_inicio ?? "") || (a.area === "Hito" ? -1 : 1)), tono: "text-olive-deep" },
+            { t: "En curso", l: items.filter((i) => i.estado === "en_curso" || i.estado === "bloqueado"), tono: "text-bronze" },
+            { t: "Próximos pasos", l: items.filter((i) => i.estado === "pendiente"), tono: "text-espresso/70" },
+          ].map((g) => (
+            <Tarjeta key={g.t} titulo={<span className={g.tono}>{g.t} <span className="text-sm text-espresso/45">{g.l.length}</span></span>} sinPadding>
+              {g.l.length ? (
+                <ul className="divide-y divide-stone/40">
+                  {g.l.map((i) => (
+                    <li key={i.id} className={`px-5 py-3 text-sm ${i.area === "Hito" ? "bg-olive/5" : ""}`}>
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <p className={i.area === "Hito" ? "font-serif text-base font-semibold" : "font-medium"}>{i.area === "Hito" && "◆ "}{i.titulo}</p>
+                        <p className="text-xs text-espresso/65">
+                          {i.estado === "finalizado" ? (periodo(i) ? `Realizado ${periodo(i)}` : "Realizado") : periodo(i) ?? ""}
+                          {i.estado === "bloqueado" && <Insignia tono="bronze">bloqueado</Insignia>}
+                        </p>
+                      </div>
+                      <p className="text-xs text-espresso/55">
+                        {[nombre.get(i.responsable_id ?? ""), i.colaborador_id && nombre.get(i.colaborador_id)].filter(Boolean).join(" y ")}
+                        {i.comentarios && <> · {i.comentarios}</>}
+                      </p>
+                      {registrado.get(i.id) && <p className="text-[11px] text-espresso/40">Registrado en la app el {f(registrado.get(i.id)!)}</p>}
+                    </li>
+                  ))}
+                </ul>
+              ) : <Vacio>Nada por aquí.</Vacio>}
+            </Tarjeta>
+          ))}
+        </div>
+      ) : vista === "timeline" ? (
         <Tarjeta sinPadding>
           <div className="overflow-x-auto">
             <div className="min-w-[56rem]">
