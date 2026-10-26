@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Groove Christmas 2026</title>
+
+<!--
+  ═══════════════════════════════════════════════════════════════════
+  DATOS EDITABLES · cambia aquí contacto, QR, precios e imágenes.
+  El resto de textos se edita directamente en el HTML de cada página.
+  ═══════════════════════════════════════════════════════════════════
+-->
+<script>
+const CONFIG = {
+  contacto: {
+    email:    "",   // ej. "eventos@tudominio.com"
+    telefono: "",   // ej. "+34 600 000 000"
+    web:      "",   // ej. "www.tudominio.com"
+    // QR: ruta a una imagen (ej. "img/qr.png") o vacío.
+    // Si está vacío y qrAuto es true, se genera un QR con qrTexto (o con la web).
+    qr: "",
+    qrAuto: true,
+    qrTexto: ""     // ej. URL de un formulario de contacto
+  },
+
+  precios: {        // €/persona
+    coctel:    55,
+    encuentro: 45,
+    destello:  65
+  },
+
+  // Imágenes: deja la foto en /img y escribe la ruta.
+  // ref: true → muestra la etiqueta «Imagen de referencia» (fotos de banco, no de Groove).
+  imagenes: {
+    portada:        { src: "", ref: false },
+    manera:         { src: "", ref: false },
+    yearClosing:    { src: "", ref: false },
+    christmasDinner:{ src: "", ref: false },
+    christmasSocial:{ src: "", ref: false },
+    clientExp:      { src: "", ref: false },
+    espacio:        { src: "", ref: false },
+    mesa:           { src: "", ref: false },
+    photocall:      { src: "", ref: false },
+    premios:        { src: "", ref: false },
+    ambienteCena:   { src: "", ref: false },
+    ambienteFiesta: { src: "", ref: false },
+    privado:        { src: "", ref: false },
+    compartido:     { src: "", ref: false },
+    cierre:         { src: "", ref: false }
+  }
+};
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..500&family=Hanken+Grotesk:wght@300;400;500;600&display=swap">
+
+<style>
+/* Concepto: dossier A4 apaisado; noche cálida y crema alternadas, luz champagne. Todo en cqw para que escale igual en pantalla y en PDF. */
+:root {
+  --noche:     #110E0C;
+  --noche-2:   #1C1714;
+  --crema:     #F1E9DB;
+  --crema-2:   #E6DBC8;
+  --champagne: #D7C29D;
+  --oro:       #A98A55;
+  --burdeos:   #5C1B27;
+  --tinta:     #2A211B;
+  --tinta-suave: #6B5D50;
+
+  --display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+  --texto:   "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
+
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: #0A0807;
+  color: var(--crema);
+  font-family: var(--texto);
+  -webkit-font-smoothing: antialiased;
+  padding-block: 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  justify-items: center;
+  gap: 32px;
+}
+
+/* ── Página ───────────────────────────────────────────── */
+.page {
+  container-type: inline-size;
+  position: relative;
+  width: min(297mm, 100%);
+  aspect-ratio: 297 / 210;
+  overflow: hidden;
+  background: var(--noche);
+  color: var(--crema);
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+.page.claro { background: var(--crema); color: var(--tinta); }
+.in {
+  position: absolute;
+  inset: 6.5cqw 6cqw 6cqw;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Tipografía ───────────────────────────────────────── */
+.eyebrow {
+  font: 500 0.95cqw/1.2 var(--texto);
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--oro);
+  margin: 0;
+}
+.claro .eyebrow { color: var(--burdeos); }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap: balance; }
+h1 { font-size: 6.6cqw; line-height: .98; letter-spacing: -.015em; }
+h2 { font-size: 4.3cqw; line-height: 1.02; letter-spacing: -.01em; }
+h3 { font-size: 1.9cqw; line-height: 1.1; }
+em, .it { font-style: italic; }
+p { margin: 0; }
+.lead { font: 300 1.55cqw/1.45 var(--texto); max-width: 52ch; }
+.body { font: 300 1.2cqw/1.6 var(--texto); max-width: 60ch; }
+.small { font: 400 1cqw/1.5 var(--texto); }
+.claro .body, .claro .small { color: var(--tinta-suave); }
+.cierre {
+  font: italic 400 1.75cqw/1.25 var(--display);
+  color: var(--champagne);
+}
+.claro .cierre { color: var(--burdeos); }
+.rule { height: 1px; background: currentColor; opacity: .2; border: 0; margin: 0; }
+
+/* ── Folio ────────────────────────────────────────────── */
+.folio {
+  position: absolute;
+  left: 6cqw; right: 6cqw; bottom: 2.6cqw;
+  display: flex; justify-content: space-between;
+  font: 500 .75cqw/1 var(--texto);
+  letter-spacing: .28em; text-transform: uppercase;
+  opacity: .55;
+}
+.folio b { font-weight: 600; }
+
+/* ── Imágenes (huecos) ────────────────────────────────── */
+.img {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(60% 50% at 72% 30%, rgba(215,194,157,.30), transparent 70%),
+    radial-gradient(40% 35% at 20% 75%, rgba(92,27,39,.55), transparent 70%),
+    radial-gradient(25% 20% at 85% 80%, rgba(169,138,85,.35), transparent 70%),
+    linear-gradient(160deg, #2A201A, #120E0C 70%);
+  background-size: cover;
+  background-position: center;
+}
+.img::before { /* bokeh suave */
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(241,233,219,.18) 0 .5cqw, transparent .6cqw),
+    radial-gradient(circle at 40% 12%, rgba(215,194,157,.22) 0 .9cqw, transparent 1cqw),
+    radial-gradient(circle at 62% 55%, rgba(215,194,157,.12) 0 1.4cqw, transparent 1.5cqw),
+    radial-gradient(circle at 88% 22%, rgba(241,233,219,.16) 0 .7cqw, transparent .8cqw),
+    radial-gradient(circle at 30% 85%, rgba(169,138,85,.18) 0 1.1cqw, transparent 1.2cqw);
+}
+.img::after { /* indicación de qué foto va aquí */
+  content: attr(data-hint);
+  position: absolute; left: 1.2cqw; bottom: 1cqw; right: 1.2cqw;
+  font: 500 .7cqw/1.3 var(--texto);
+  letter-spacing: .2em; text-transform: uppercase;
+  color: rgba(241,233,219,.55);
+}
+.img.has-img::before, .img.has-img::after { content: none; }
+.img .ref {
+  position: absolute; right: .8cqw; bottom: .7cqw;
+  font: 500 .62cqw/1 var(--texto); letter-spacing: .18em; text-transform: uppercase;
+  color: rgba(241,233,219,.8);
+  background: rgba(17,14,12,.55);
+  padding: .4cqw .6cqw;
+}
+
+/* ── 1 · Portada ──────────────────────────────────────── */
+#p1 .img { position: absolute; inset: 0; }
+#p1 .velo {
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(17,14,12,.92) 0%, rgba(17,14,12,.7) 42%, rgba(17,14,12,.05) 75%),
+              linear-gradient(0deg, rgba(17,14,12,.6), transparent 35%);
+}
+#p1 .in { justify-content: space-between; }
+.marca { display: flex; align-items: baseline; gap: 1.2cqw; }
+.marca .nombre { font: 500 1.15cqw/1 var(--texto); letter-spacing: .42em; text-transform: uppercase; }
+.marca .by { font: italic 400 1.15cqw/1 var(--display); color: var(--champagne); }
+.edicion {
+  font: 400 1.05cqw/1 var(--texto); letter-spacing: .6em; text-transform: uppercase;
+  color: var(--champagne);
+  display: flex; align-items: center; gap: 1.4cqw;
+}
+.edicion::before { content: ""; width: 4cqw; height: 1px; background: var(--oro); }
+#p1 h1 { max-width: 11ch; margin-top: 1.6cqw; }
+#p1 h1 em { color: var(--champagne); }
+#p1 .lead { margin-top: 2cqw; max-width: 34ch; }
+#p1 .lema { font: italic 400 1.35cqw/1.3 var(--display); color: var(--champagne); }
+
+/* ── 2 · Una Navidad a vuestra manera ─────────────────── */
+#p2 .grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 4.5cqw; height: 100%; }
+#p2 .col { display: flex; flex-direction: column; gap: 1.6cqw; min-width: 0; }
+#p2 h2 { margin-top: .6cqw; }
+#p2 .claim { font: italic 400 2cqw/1.25 var(--display); color: var(--burdeos); max-width: 26ch; }
+#p2 .diferencia {
+  margin-top: auto;
+  border-top: 1px solid rgba(42,33,27,.2);
+  padding-top: 1.4cqw;
+  font: 400 1.15cqw/1.55 var(--texto);
+  color: var(--tinta);
+  max-width: 56ch;
+}
+#p2 .img { height: 100%; }
+.momentos {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: var(--noche); color: var(--champagne);
+  padding: 1.5cqw 6cqw;
+  display: flex; justify-content: space-between; align-items: center;
+  font: 400 1.5cqw/1 var(--display);
+}
+.momentos span:not(.dot) { letter-spacing: .02em; }
+.momentos .dot { color: var(--oro); font-size: 1cqw; }
+#p2 .in { bottom: 7.4cqw; }
+
+/* ── 3 · Imagina vuestro evento ───────────────────────── */
+.cabecera { display: flex; justify-content: space-between; align-items: flex-end; gap: 4cqw; }
+.cabecera .body { max-width: 42ch; }
+.cuatro { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.6cqw; margin-top: 2.6cqw; flex: 1; }
+.tarjeta { display: flex; flex-direction: column; gap: 1.1cqw; min-width: 0; }
+.tarjeta .img { flex: 1; min-height: 0; }
+.tarjeta .tipo { font: 500 1.05cqw/1.2 var(--texto); letter-spacing: .28em; text-transform: uppercase; color: var(--champagne); }
+.tarjeta .formula { font: 300 1.1cqw/1.5 var(--texto); }
+.tarjeta .formula b { font-weight: 500; color: var(--champagne); }
+.pie { margin-top: 2.2cqw; display: flex; justify-content: space-between; align-items: baseline; }
+
+/* ── 4 · El espacio se transforma ─────────────────────── */
+#p4 .arriba { display: grid; grid-template-columns: 1fr 1fr; gap: 4cqw; }
+#p4 .arriba .col { display: flex; flex-direction: column; gap: 1.4cqw; min-width: 0; }
+#p4 .img { height: 17cqw; }
+.secuencia {
+  margin-top: 2.6cqw;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  border-top: 1px solid rgba(215,194,157,.3);
+}
+.paso { padding-top: 1.1cqw; position: relative; }
+.paso::before {
+  content: ""; position: absolute; top: -.45cqw; left: 0;
+  width: .9cqw; height: .9cqw; border-radius: 50%;
+  background: var(--noche); border: 1px solid var(--champagne);
+}
+.paso:last-child::before { background: var(--champagne); }
+.paso .n { font: 500 .8cqw/1 var(--texto); letter-spacing: .25em; color: var(--oro); }
+.paso .t { font: 400 1.75cqw/1.15 var(--display); margin-top: .6cqw; }
+.recursos {
+  margin-top: 2.4cqw;
+  display: flex; flex-wrap: wrap; gap: .7cqw;
+}
+.recursos span {
+  font: 400 .95cqw/1 var(--texto); letter-spacing: .04em;
+  border: 1px solid rgba(215,194,157,.35);
+  color: var(--crema);
+  padding: .7cqw 1.1cqw;
+  border-radius: 99px;
+}
+#p4 .cierre { margin-top: auto; }
+
+/* ── 5 · Gastronomía ──────────────────────────────────── */
+#p5 .arriba { display: grid; grid-template-columns: 1fr 1fr; gap: 4cqw; align-items: end; }
+.formatos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6cqw; margin-top: 2.6cqw; }
+.formato {
+  display: flex; flex-direction: column; gap: 1cqw;
+  border-top: 2px solid var(--tinta);
+  padding-top: 1.4cqw;
+  min-width: 0;
+}
+.formato .nombre { font: 500 1cqw/1.2 var(--texto); letter-spacing: .3em; text-transform: uppercase; color: var(--burdeos); }
+.precio { font: 400 4.2cqw/1 var(--display); display: flex; align-items: baseline; gap: .5cqw; }
+.precio small { font: 400 1cqw/1 var(--texto); letter-spacing: .1em; color: var(--tinta-suave); }
+.formato .que { font: italic 400 1.45cqw/1.3 var(--display); color: var(--tinta); }
+.formato .body { font-size: 1.08cqw; }
+#p5 .img { flex: 1; min-height: 6cqw; margin-top: 2.2cqw; }
+.nota { font: 400 .95cqw/1.4 var(--texto); letter-spacing: .08em; color: var(--tinta-suave); }
+.nota::before { content: "— "; color: var(--oro); }
+
+/* ── 6 · Menús ────────────────────────────────────────── */
+.menus { display: grid; grid-template-columns: .8fr 1fr 1fr; gap: 3cqw; margin-top: 2.2cqw; flex: 1; }
+.menu { display: flex; flex-direction: column; min-width: 0; border-left: 1px solid rgba(215,194,157,.25); padding-left: 2cqw; }
+.menu:first-child { border-left: 0; padding-left: 0; }
+.menu .cab { display: flex; justify-content: space-between; align-items: baseline; gap: 1cqw; }
+.menu h3 { font-size: 2.4cqw; color: var(--champagne); }
+.menu .pp { font: 400 2cqw/1 var(--display); white-space: nowrap; }
+.menu .pp small { font: 400 .8cqw/1 var(--texto); letter-spacing: .1em; opacity: .7; }
+.menu .tiempo { margin-top: 1.9cqw; }
+.menu .tiempo .tt {
+  font: 500 .88cqw/1 var(--texto); letter-spacing: .28em; text-transform: uppercase; color: var(--oro);
+}
+.menu .tiempo .tt i { font: italic 400 1.05cqw/1 var(--display); letter-spacing: 0; text-transform: none; color: var(--champagne); }
+.menu ul { list-style: none; margin: .7cqw 0 0; padding: 0; display: grid; gap: .45cqw; }
+.menu li, .menu .plato { font: 300 1.22cqw/1.4 var(--texto); }
+.menu li::before { content: "·"; color: var(--oro); margin-right: .6cqw; }
+.menu .plato { margin-top: .7cqw; }
+.menu .incluye {
+  margin-top: auto; padding-top: 1.2cqw;
+  font: 400 .95cqw/1.45 var(--texto); color: rgba(241,233,219,.65);
+}
+.menu.coctel .cifra { font: 400 7.5cqw/1 var(--display); color: var(--champagne); margin-top: 2cqw; }
+.menu.coctel .cifra-t { font: 500 .85cqw/1.3 var(--texto); letter-spacing: .26em; text-transform: uppercase; color: var(--oro); }
+.menu.coctel .mas { font: italic 400 1.6cqw/1.2 var(--display); margin-top: 1.6cqw; }
+#p6 .notas { display: flex; justify-content: space-between; margin-top: 1.4cqw; }
+#p6 .nota { color: rgba(241,233,219,.6); }
+
+/* ── 7 · Más allá de la cena ──────────────────────────── */
+#p7 .grid { display: grid; grid-template-columns: .9fr 1.6fr; gap: 4cqw; height: 100%; }
+#p7 .fotos { display: grid; grid-template-rows: 1.2fr 1fr; gap: 1.4cqw; min-width: 0; }
+#p7 .der { display: flex; flex-direction: column; gap: 1.4cqw; min-width: 0; }
+.seis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2cqw 2.4cqw; margin-top: 1cqw; }
+.item { border-top: 1px solid rgba(215,194,157,.3); padding-top: 1cqw; display: grid; gap: .5cqw; align-content: start; }
+.item h3 { font-size: 1.55cqw; color: var(--champagne); }
+.item p { font: 300 1.02cqw/1.5 var(--texto); }
+#p7 .cierre { margin-top: auto; }
+
+/* ── 8 · Cena + celebración ───────────────────────────── */
+#p8 .mitades { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; }
+#p8 .mitades .img { height: 100%; }
+#p8 .mitades .img:first-child { filter: saturate(.85); }
+#p8 .velo {
+  position: absolute; inset: 0;
+  background: linear-gradient(0deg, rgba(17,14,12,.96) 0%, rgba(17,14,12,.82) 42%, rgba(17,14,12,.2) 75%, rgba(17,14,12,.35) 100%);
+}
+#p8 .etq {
+  position: absolute; top: 4.4cqw;
+  font: 500 .85cqw/1 var(--texto); letter-spacing: .3em; text-transform: uppercase; color: var(--champagne);
+}
+#p8 .etq.a { left: 6cqw; }
+#p8 .etq.b { left: calc(50% + 2cqw); }
+#p8 .divisor { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: rgba(215,194,157,.4); }
+#p8 .in { justify-content: flex-end; gap: 1.6cqw; }
+#p8 h1 { font-size: 4.3cqw; max-width: 40cqw; }
+#p8 .fila { display: grid; grid-template-columns: 40cqw 1fr; gap: 6cqw; align-items: end; }
+.lista-dos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: .7cqw 2cqw; }
+.lista-dos li { font: 400 1.08cqw/1.3 var(--texto); padding-left: 1.4cqw; position: relative; }
+.lista-dos li::before { content: ""; position: absolute; left: 0; top: .55cqw; width: .7cqw; height: 1px; background: var(--oro); }
+
+/* ── 9 · Privado o compartido ─────────────────────────── */
+#p9 .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 3cqw; margin-top: 2.2cqw; flex: 1; }
+.opcion { display: grid; grid-template-columns: 11cqw 1fr; gap: 1.8cqw; min-width: 0; }
+.opcion .img { height: 100%; }
+.opcion .txt { display: flex; flex-direction: column; gap: 1cqw; min-width: 0; }
+.opcion .tipo { font: 500 1cqw/1.2 var(--texto); letter-spacing: .3em; text-transform: uppercase; color: var(--burdeos); }
+.opcion h3 { font-size: 1.6cqw; line-height: 1.25; color: var(--tinta); font-style: italic; }
+.opcion ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .45cqw; }
+.opcion li { font: 400 1.05cqw/1.4 var(--texto); color: var(--tinta); padding-left: 1.3cqw; position: relative; }
+.opcion li::before { content: ""; position: absolute; left: 0; top: .65cqw; width: .6cqw; height: 1px; background: var(--oro); }
+.opcion .destaca {
+  margin-top: auto;
+  font: italic 400 1.45cqw/1.25 var(--display); color: var(--burdeos);
+  border-top: 1px solid rgba(42,33,27,.2); padding-top: 1cqw;
+}
+#p9 .cierre { margin-top: 2cqw; }
+
+/* ── 10 · Tres formas ─────────────────────────────────── */
+.tres { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 2.6cqw; flex: 1; }
+.forma { padding: 0 2.4cqw; border-left: 1px solid rgba(215,194,157,.25); display: flex; flex-direction: column; gap: 1.2cqw; min-width: 0; }
+.forma:first-child { padding-left: 0; border-left: 0; }
+.forma .n { font: italic 400 6cqw/1 var(--display); color: var(--oro); }
+.forma h3 { font-size: 1.15cqw; font-family: var(--texto); font-weight: 500; letter-spacing: .28em; text-transform: uppercase; color: var(--champagne); }
+.forma .sub { font: italic 400 1.9cqw/1.3 var(--display); }
+.forma .pi { font: 500 .85cqw/1 var(--texto); letter-spacing: .25em; text-transform: uppercase; color: var(--oro); margin-top: auto; }
+.forma ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-content: flex-start; gap: .6cqw; min-height: 9.2cqw; }
+.forma li { font: 400 1.08cqw/1 var(--texto); border: 1px solid rgba(215,194,157,.35); padding: .6cqw .9cqw; border-radius: 99px; }
+#p10 .cierre { margin-top: 2cqw; }
+
+/* ── 11 · Por qué ─────────────────────────────────────── */
+#p11 .arriba { display: grid; grid-template-columns: 1fr 1fr; gap: 4cqw; align-items: end; }
+.argumentos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3.4cqw 3cqw; margin-top: 4.5cqw; }
+.arg { display: grid; grid-template-columns: 3cqw 1fr; gap: 1cqw; }
+.arg .n { font: italic 400 2.2cqw/1 var(--display); color: var(--oro); }
+.arg h3 { font-size: 1.85cqw; color: var(--tinta); }
+.arg p { font: 300 1.15cqw/1.5 var(--texto); color: var(--tinta-suave); margin-top: .4cqw; }
+#p11 .cierre { margin-top: auto; }
+
+/* ── 12 · Cierre ──────────────────────────────────────── */
+#p12 .img { position: absolute; top: 0; right: 0; bottom: 0; width: 38%; }
+#p12 .img + .velo { position: absolute; top: 0; bottom: 0; right: 0; width: 38%; background: linear-gradient(90deg, var(--noche), rgba(17,14,12,0) 40%); }
+#p12 .in { right: 44%; justify-content: center; gap: 1.6cqw; }
+#p12 h1 { font-size: 5.2cqw; }
+#p12 h1 em { color: var(--champagne); }
+#p12 .lead { color: var(--champagne); }
+.contacto {
+  margin-top: 1.6cqw;
+  display: grid; grid-template-columns: 1fr auto; gap: 3cqw; align-items: end;
+  border-top: 1px solid rgba(215,194,157,.3); padding-top: 1.8cqw;
+}
+.contacto .marca .nombre { font-size: 1cqw; }
+.datos { display: grid; grid-template-columns: auto 1fr; gap: .8cqw 1.6cqw; margin-top: 1.4cqw; }
+.datos dt { font: 500 .8cqw/1.5 var(--texto); letter-spacing: .26em; text-transform: uppercase; color: var(--oro); }
+.datos dd { margin: 0; font: 400 1.15cqw/1.3 var(--texto); }
+.vacio { color: var(--champagne); border-bottom: 1px dashed var(--oro); opacity: .85; }
+.qr {
+  width: 9cqw; height: 9cqw;
+  border: 1px dashed rgba(215,194,157,.5);
+  display: grid; place-items: center; text-align: center;
+  font: 500 .7cqw/1.4 var(--texto); letter-spacing: .2em; text-transform: uppercase; color: rgba(241,233,219,.55);
+  background: transparent;
+}
+.qr.lleno { border: 0; background: var(--crema); padding: .5cqw; }
+.qr img, .qr svg { width: 100%; height: 100%; display: block; }
+
+/* ── Impresión / PDF ──────────────────────────────────── */
+@page { size: 297mm 210mm; margin: 0; }
+@media print {
+  body { background: none; padding: 0; gap: 0; display: block; }
+  .page { width: 297mm; height: 210mm; box-shadow: none; break-after: page; page-break-after: always; }
+  .page:last-child { break-after: auto; page-break-after: auto; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ 1 · PORTADA ═══ -->
+<section class="page" id="p1">
+  <figure class="img" data-img="portada" data-hint="Imagen protagonista · gran sala con iluminación cálida"></figure>
+  <div class="velo"></div>
+  <div class="in">
+    <div class="marca"><span class="nombre">The Groove Experience</span><span class="by">by Groove Madrid</span></div>
+    <div>
+      <p class="edicion">Christmas 2026</p>
+      <h1>Una Navidad que no se parece <em>a ninguna otra.</em></h1>
+      <p class="lead">Eventos de Navidad para empresas diseñados a vuestra medida.</p>
+    </div>
+    <p class="lema">Una misma noche. Dos ambientes. Una sola experiencia.</p>
+  </div>
+</section>
+
+<!-- ═══ 2 · UNA NAVIDAD A VUESTRA MANERA ═══ -->
+<section class="page claro" id="p2">
+  <div class="in">
+    <div class="grid">
+      <div class="col">
+        <p class="eyebrow">Una Navidad a vuestra manera</p>
+        <h2>No es una cena de empresa más.</h2>
+        <p class="claim">Es una experiencia que solo puede vivirse de esta forma en Groove.</p>
+        <p class="body">Cada empresa celebra de una forma distinta. Por eso, en THE GROOVE EXPERIENCE diseñamos cada evento a medida: desde una cena de Navidad hasta una presentación de cierre de año, una entrega de premios, un cóctel informal o una gran celebración.</p>
+        <p class="body">Un mismo espacio puede transformarse a lo largo de la experiencia, adaptándose al momento, al equipo y a la forma en la que queráis celebrar.</p>
+        <p class="diferencia">Empezar la noche en un entorno corporativo y terminarla en una celebración completamente distinta, sin salir del mismo espacio. Eso es lo que un restaurante, un hotel o una sala convencional no pueden ofrecer igual.</p>
+      </div>
+      <figure class="img" data-img="manera" data-hint="Equipo brindando · ambiente cálido"></figure>
+    </div>
+  </div>
+  <div class="momentos">
+    <span>Presentación</span><span class="dot">◆</span>
+    <span>Cóctel</span><span class="dot">◆</span>
+    <span>Cena</span><span class="dot">◆</span>
+    <span>Premios</span><span class="dot">◆</span>
+    <span>Activaciones</span><span class="dot">◆</span>
+    <span>Fiesta</span>
+  </div>
+</section>
+
+<!-- ═══ 3 · IMAGINA VUESTRO EVENTO ═══ -->
+<section class="page" id="p3">
+  <div class="in">
+    <div class="cabecera">
+      <div>
+        <p class="eyebrow">Un espacio. Muchas formas de celebrar.</p>
+        <h2 style="margin-top:1.2cqw">Imagina vuestro evento</h2>
+      </div>
+    </div>
+    <div class="cuatro">
+      <article class="tarjeta">
+        <figure class="img" data-img="yearClosing" data-hint="Presentación en pantalla"></figure>
+        <p class="tipo">Year Closing</p>
+        <p class="formula"><b>Presentación de resultados u objetivos</b> + cena + celebración.</p>
+      </article>
+      <article class="tarjeta">
+        <figure class="img" data-img="christmasDinner" data-hint="Cena corporativa · montaje elegante"></figure>
+        <p class="tipo">Christmas Dinner</p>
+        <p class="formula"><b>Cena de empresa</b> + entrega de premios + DJ y celebración.</p>
+      </article>
+      <article class="tarjeta">
+        <figure class="img" data-img="christmasSocial" data-hint="Cóctel · mesas altas"></figure>
+        <p class="tipo">Christmas Social</p>
+        <p class="formula"><b>Cóctel informal</b> + networking + activaciones + música.</p>
+      </article>
+      <article class="tarjeta">
+        <figure class="img" data-img="clientExp" data-hint="Recepción de clientes"></figure>
+        <p class="tipo">Client Experience</p>
+        <p class="formula"><b>Evento para clientes o partners</b> + presentación + gastronomía + celebración.</p>
+      </article>
+    </div>
+    <div class="pie">
+      <p class="cierre">El punto de partida lo elegís vosotros. Nosotros damos forma al resto.</p>
+    </div>
+  </div>
+  <div class="folio"><span>The Groove Experience · <b>Christmas 2026</b></span><span>03</span></div>
+</section>
+
+<!-- ═══ 4 · EL ESPACIO SE TRANSFORMA ═══ -->
+<section class="page" id="p4">
+  <div class="in">
+    <div class="arriba">
+      <div class="col">
+        <p class="eyebrow">El espacio se transforma</p>
+        <h2>Un espacio que cambia con vuestro evento</h2>
+        <p class="body">Un mismo espacio puede acompañar distintos momentos de la celebración. La sala puede transformarse para recibir a los invitados, acoger una presentación o entrega de premios, convertirse en un espacio de cena o cóctel y, después, cambiar completamente de ambiente para dar paso a la celebración.</p>
+      </div>
+      <figure class="img" data-img="espacio" data-hint="Sala técnica · pantallas, luz y sonido"></figure>
+    </div>
+
+    <div class="secuencia">
+      <div class="paso"><div class="n">01</div><div class="t">Recepción</div></div>
+      <div class="paso"><div class="n">02</div><div class="t">Presentación</div></div>
+      <div class="paso"><div class="n">03</div><div class="t">Cena / Cóctel</div></div>
+      <div class="paso"><div class="n">04</div><div class="t">Activación</div></div>
+      <div class="paso"><div class="n">05</div><div class="t">Celebración</div></div>
+    </div>
+
+    <div class="recursos">
+      <span>Pantallas y contenido audiovisual</span>
+      <span>Iluminación adaptable</span>
+      <span>Branding corporativo</span>
+      <span>Photocall</span>
+      <span>Rincones tematizados</span>
+      <span>Juegos y dinámicas</span>
+      <span>Mesas altas</span>
+      <span>Cena sentada</span>
+      <span>Barra</span>
+      <span>DJ</span>
+      <span>Pista de baile</span>
+    </div>
+
+    <p class="cierre">Un mismo lugar. Distintos momentos. Una sola experiencia.</p>
+  </div>
+  <div class="folio"><span>The Groove Experience · <b>Christmas 2026</b></span><span>04</span></div>
+</section>
+
+<!-- ═══ 5 · GASTRONOMÍA ═══ -->
+<section class="page claro" id="p5">
+  <div class="in">
+    <div class="arriba">
+      <div>
+        <p class="eyebrow">Gastronomía</p>
+        <h2 style="margin-top:1.2cqw">La mesa también forma parte de la experiencia</h2>
+      </div>
+      <p class="body">Cada evento tiene su propio ritmo, por eso planteamos diferentes formatos gastronómicos para adaptarnos al tipo de celebración, al número de asistentes y al ambiente que queráis crear.</p>
+    </div>
+
+    <div class="formatos">
+      <article class="formato">
+        <p class="nombre">Cóctel largo</p>
+        <p class="precio"><span data-precio="coctel">55</span> €<small>/persona</small></p>
+        <p class="que">Para una celebración más dinámica y social.</p>
+        <p class="body">15 entrantes fríos + 15 entrantes calientes + postre. Formato diseñado para favorecer la conversación, el movimiento y la interacción entre invitados.</p>
+      </article>
+      <article class="formato">
+        <p class="nombre">Menú Encuentro</p>
+        <p class="precio"><span data-precio="encuentro">45</span> €<small>/persona</small></p>
+        <p class="que">Una propuesta equilibrada y versátil para cenas de empresa y grupos numerosos.</p>
+      </article>
+      <article class="formato">
+        <p class="nombre">Menú Destello</p>
+        <p class="precio"><span data-precio="destello">65</span> €<small>/persona</small></p>
+        <p class="que">Una propuesta gastronómica más especial para dar mayor protagonismo a la cena.</p>
+      </article>
+    </div>
+
+    <figure class="img" data-img="mesa" data-hint="Mesa montada · detalle gastronómico"></figure>
+    <p class="nota" style="margin-top:1.2cqw">Opciones gastronómicas premium disponibles bajo petición.</p>
+  </div>
+  <div class="folio"><span>The Groove Experience · <b>Christmas 2026</b></span><span>05</span></div>
+</section>
+
+<!-- ═══ 6 · MENÚS ═══ -->
+<section class="page" id="p6">
+  <div class="in">
+    <p class="eyebrow">Menús · Christmas 2026</p>
+    <div class="menus">
+
+      <article class="menu coctel">
+        <div class="cab"><h3>Cóctel largo</h3><span class="pp"><span data-precio="coctel">55</span> €<small>/pp</small></span></div>
+        <p class="cifra">15 + 15</p>
+        <p class="cifra-t">Entrantes fríos + entrantes calientes</p>
+        <p class="mas">+ postre</p>
+        <p class="incluye">(Incluye: Agua, cerveza, vino blanco y tinto, refrescos y vinos espumosos)</p>
+      </article>
+
+      <article class="menu">
+        <div class="cab"><h3>Menú Encuentro</h3><span class="pp"><span data-precio="encuentro">45</span> €<small>/pp</small></span></div>
+        <div class="tiempo">
+          <p class="tt">Entrantes <i>(a compartir)</i></p>
+          <ul>
+            <li>Ibéricos y queso manchego</li>
+            <li>Pimientos rellenos de bacalao con sus cocochas</li>
+            <li>Ensaladilla de La Ribera con gambas al ajillo</li>
+          </ul>
+        </div>
+        <div class="tiempo">
+          <p class="tt">Sorbete</p>
+          <p class="plato">De piña colada</p>
+        </div>
+        <div class="tiempo">
+          <p class="tt">Segundos <i>(a elegir)</i></p>
+          <ul>
+            <li>Entrecot de rubia gallega a la parrilla con su guarnición</li>
+            <li>Corvina salvaje con bilbaína de pimientos</li>
+            <li>Pierna de lechal asada en su jugo</li>
+          </ul>
+        </div>
+        <div class="tiempo">
+          <p class="tt">Postre</p>
+          <p class="plato">Coulant de Bailey’s y chocolate con helado de café</p>
+        </div>
+        <p class="incluye">(Incluye: Agua, cerveza, vino blanco y tinto, refrescos y vinos espumosos)</p>
+      </article>
+
+      <article class="menu">
+        <div class="cab"><h3>Menú Destello</h3><span class="pp"><span data-precio="destello">65</span> €<small>/pp</small></span></div>
+        <div class="tiempo">
+          <p class="tt">Entrantes <i>(a compartir)</i></p>
+          <ul>
+            <li>Jamón ibérico de bellota con sus panes</li>
+            <li>Almejas a la sartén con ajillo</li>
+            <li>Tomate ibérico, ventresca de bonito del norte, guacamole y piparras</li>
+          </ul>
+        </div>
+        <div class="tiempo">
+          <p class="tt">Sorbete</p>
+          <p class="plato">Mango y cava</p>
+        </div>
+        <div class="tiempo">
+          <p class="tt">Segundos <i>(a elegir)</i></p>
+          <ul>
+            <li>Lomo de mero a la donostiarra</li>
+            <li>Lomo de vaca madurada 45 días a la brasa</li>
+            <li>Cuarto de cordero de lechal asado con su guarnición (2pax)</li>
+          </ul>
+        </div>
+        <div class="tiempo">
+          <p class="tt">Postre</p>
+          <p class="plato">Torrija de pan brioche caramelizada con helado de dulce de leche</p>
+        </div>
+        <p class="incluye">(Incluye: Agua, cerveza, vino blanco y tinto, refrescos y vinos espumosos)</p>
+      </article>
+
+    </div>
+    <div class="notas"><p class="nota">Opciones premium disponibles bajo petición.</p></div>
+  </div>
+  <div class="folio"><span>The Groove Experience · <b>Christmas 2026</b></span><span>06</span></div>
+</section>
+
+<!-- ═══ 7 · MÁS ALLÁ DE LA CENA ═══ -->
+<section class="page" id="p7">
+  <div class="in">
+    <div class="grid">
+      <div class="fotos">
+        <figure class="img" data-img="photocall" data-hint="Photocall navideño de marca"></figure>
+        <figure class="img" data-img="premios" data-hint="Entrega de premios en escenario"></figure>
+      </div>
+      <div class="der">
+        <p class="eyebrow">Más allá de la cena</p>
+        <h2>Porque la experiencia no termina en la mesa</h2>
+        <p class="body">La Navidad de empresa también puede ser una oportunidad para sorprender, conectar al equipo y crear momentos que se recuerden. Cada evento puede incorporar activaciones, dinámicas y elementos personalizados para hacer que la celebración sea realmente vuestra.</p>
+        <div class="seis">
+          <div class="item"><h3>Photocall navideño</h3><p>Personalizado con la identidad de la empresa.</p></div>
+          <div class="item"><h3>Branding y ambientación</h3><p>Logotipo, colores corporativos, mensajes, pantallas y elementos personalizados.</p></div>
+          <div class="item"><h3>Juegos y dinámicas</h3><p>Retos por equipos, quiz corporativo, ruleta de premios, amigo invisible, concursos u otras propuestas.</p></div>
+          <div class="item"><h3>Entrega de premios</h3><p>Reconocimientos, premios internos o formatos más informales.</p></div>
+          <div class="item"><h3>Foto y vídeo</h3><p>Cobertura del evento y generación de contenido.</p></div>
+          <div class="item"><h3>Activaciones especiales</h3><p>Karaoke, cabina de vídeo, casino, talleres, regalos corporativos u otras propuestas personalizadas.</p></div>
+        </div>
+        <p class="cierre">Cada detalle puede convertirse en una parte más de la experiencia.</p>
+      </div>
+    </div>
+  </div>
+  <div class="folio"><span>The Groove Experience · <b>Christmas 2026</b></span><span>07</span></div>
+</section>
+
+<!-- ═══ 8 · CENA + CELEBRACIÓN ═══ -->
+<section class="page" id="p8">
+  <div class="mitades">
+    <figure class="img" data-img="ambienteCena" data-hint="Ambiente 1 · cena o cóctel"></figure>
+    <figure class="img" data-img="ambienteFiesta" data-hint="Ambiente 2 · DJ, luces y pista"></figure>
+  </div>
+  <div class="velo"></div>
+  <div class="divisor"></div>
+  <span class="etq a">Primer ambiente · Cena o cóctel</span>
+  <span class="etq b">Segundo ambiente · Celebración</span>
+  <div class="in">
+    <p class="eyebrow">Cena + celebración</p>
+    <h1>Una misma noche. Dos ambientes. <em>Una sola experiencia.</em></h1>
+    <div class="fila">
+      <div style="display:grid;gap:1cqw">
+        <p class="body">Una de las grandes ventajas de celebrar vuestro evento en Groove es que no hace falta cambiar de espacio para cambiar completamente de ambiente.</p>
+        <p class="body">Después de la cena o el cóctel, la sala puede transformarse para dar paso a la celebración: iluminación, sonido, DJ, barra y pista de baile, todo dentro del mismo evento.</p>
+      </div>
+      <div style="display:grid;gap:1.6cqw">
+        <ul class="lista-dos">
+          <li>DJ y música a medida</li>
+          <li>Sonido profesional</li>
+          <li>Iluminación y ambientación</li>
+          <li>Pantallas y contenido audiovisual</li>
+          <li>Barra y pista de baile</li>
+          <li>Animación y extras</li>
+        </ul>
+        <p class="cierre">El mismo espacio. Un ambiente completamente distinto.</p>
+      </div>
+    </div>
+  </div>
+  <div class="folio"><span>The Groove Experience · <b>Christmas 2026</b></span><span>08</span></div>
+</section>
+
+<!-- ═══ 9 · PRIVADO O COMPARTIDO ═══ -->
+<section class="page claro" id="p9">
+  <div class="in">
+    <p class="eyebrow">Privado o compartido</p>
+    <h2 style="margin-top:1.2cqw">Dos maneras de celebrar. Una misma experiencia.</h2>
+    <p class="body" style="margin-top:1.2cqw">Cada empresa tiene unas necesidades diferentes, por eso planteamos dos formas de vivir la Navidad en THE GROOVE EXPERIENCE.</p>
+    <div class="dos">
+      <article class="opcion">
+        <figure class="img" data-img="privado" data-hint="Evento privado"></figure>
+        <div class="txt">
+          <p class="tipo">Evento privado</p>
+          <h3>Para empresas que buscan exclusividad y personalización total.</h3>
+          <ul>
+            <li>Uso exclusivo del espacio</li>
+            <li>Montaje adaptado</li>
+            <li>Branding personalizado</li>
+            <li>Horarios y dinámica a medida</li>
+            <li>Presentación + cena + activaciones + celebración</li>
+          </ul>
+          <p class="destaca">Vuestro evento. Vuestro espacio. Vuestro ritmo.</p>
+        </div>
+      </article>
+      <article class="opcion">
+        <figure class="img" data-img="compartido" data-hint="Christmas Party compartida"></figure>
+        <div class="txt">
+          <p class="tipo">Christmas Party compartida</p>
+          <h3>Para equipos que quieren vivir una gran celebración sin necesitar el espacio completo en exclusiva.</h3>
+          <ul>
+            <li>Varias empresas comparten una misma fecha</li>
+            <li>Cada empresa mantiene su grupo o reserva</li>
+            <li>Cena o cóctel</li>
+            <li>Celebración común posterior</li>
+            <li>Especialmente interesante para grupos pequeños y medianos</li>
+          </ul>
+          <p class="destaca">Compartir la noche sin perder vuestra identidad.</p>
+        </div>
+      </article>
+    </div>
+    <p class="cierre">Sea cual sea el formato, diseñamos la experiencia para que encaje con vuestro equipo.</p>
+  </div>
+  <div class="folio"><span>The Groove Experience · <b>Christmas 2026</b></span><span>09</span></div>
+</section>
+
+<!-- ═══ 10 · TRES FORMAS DE VIVIRLO ═══ -->
+<section class="page" id="p10">
+  <div class="in">
+    <p class="eyebrow">Inspiración · no son packs cerrados</p>
+    <h2 style="margin-top:1.2cqw">Tres formas de vivirlo</h2>
+    <div class="tres">
+      <article class="forma">
+        <span class="n">i.</span>
+        <h3>Year Closing Experience</h3>
+        <p class="sub">Cerrar el año, compartir resultados y celebrar.</p>
+        <p class="pi">Puede incluir</p>
+        <ul><li>Recepción</li><li>Presentación</li><li>Cena</li><li>Reconocimientos</li><li>DJ</li><li>Celebración</li></ul>
+      </article>
+      <article class="forma">
+        <span class="n">ii.</span>
+        <h3>Christmas Dinner</h3>
+        <p class="sub">Una cena de empresa que va mucho más allá de sentarse a la mesa.</p>
+        <p class="pi">Puede incluir</p>
+        <ul><li>Bienvenida</li><li>Cena o cóctel</li><li>Photocall</li><li>Branding</li><li>Premios</li><li>DJ</li><li>Pista</li></ul>
+      </article>
+      <article class="forma">
+        <span class="n">iii.</span>
+        <h3>Christmas Social</h3>
+        <p class="sub">Una propuesta más dinámica, informal y participativa.</p>
+        <p class="pi">Puede incluir</p>
+        <ul><li>Cóctel largo</li><li>Mesas altas</li><li>Juegos</li><li>Networking</li><li>Activaciones</li><li>Música</li><li>Celebración</li></ul>
+      </article>
+    </div>
+    <p class="cierre">Tres puntos de partida. Infinitas formas de personalizarlos.</p>
+  </div>
+  <div class="folio"><span>The Groove Experience · <b>Christmas 2026</b></span><span>10</span></div>
+</section>
+
+<!-- ═══ 11 · POR QUÉ ═══ -->
+<section class="page claro" id="p11">
+  <div class="in">
+    <div class="arriba">
+      <div>
+        <p class="eyebrow">Por qué The Groove Experience</p>
+        <h2 style="margin-top:1.2cqw">Todo lo que necesita vuestro evento, en un mismo lugar.</h2>
+      </div>
+      <div style="display:grid;gap:1cqw">
+        <p class="body">THE GROOVE EXPERIENCE reúne espacio, gastronomía, producción y celebración en una única propuesta.</p>
+        <p class="body">Un formato flexible que permite adaptar cada evento a la identidad de la empresa y acompañar distintos momentos sin necesidad de cambiar de ubicación.</p>
+      </div>
+    </div>
+    <div class="argumentos">
+      <div class="arg"><span class="n">i</span><div><h3>Un espacio versátil</h3><p>Presentaciones, cenas, cócteles, activaciones y celebración.</p></div></div>
+      <div class="arg"><span class="n">ii</span><div><h3>Producción técnica integrada</h3><p>Sonido, iluminación, pantallas y recursos audiovisuales.</p></div></div>
+      <div class="arg"><span class="n">iii</span><div><h3>Gastronomía adaptable</h3><p>Cóctel, cena sentada y opciones premium.</p></div></div>
+      <div class="arg"><span class="n">iv</span><div><h3>Personalización</h3><p>Branding, decoración, photocall, contenidos y dinámicas.</p></div></div>
+      <div class="arg"><span class="n">v</span><div><h3>Todo en un mismo lugar</h3><p>Sin desplazamientos entre la parte corporativa, la cena y la celebración.</p></div></div>
+      <div class="arg"><span class="n">vi</span><div><h3>Una experiencia diseñada a medida</h3><p>Adaptada al objetivo, equipo y presupuesto de cada empresa.</p></div></div>
+    </div>
+    <p class="cierre">Un espacio preparado para adaptarse. Una experiencia pensada para recordar.</p>
+  </div>
+  <div class="folio"><span>The Groove Experience · <b>Christmas 2026</b></span><span>11</span></div>
+</section>
+
+<!-- ═══ 12 · CIERRE ═══ -->
+<section class="page" id="p12">
+  <figure class="img" data-img="cierre" data-hint="Detalle de luz · brindis"></figure>
+  <div class="velo"></div>
+  <div class="in">
+    <p class="eyebrow">Christmas 2026</p>
+    <h1>Esta Navidad, celebrad <em>algo más que una cena.</em></h1>
+    <p class="lead">Diseñemos juntos una experiencia para vuestro equipo.</p>
+    <p class="body">Cuéntanos qué tenéis en mente y construiremos una propuesta a medida para vuestra empresa.</p>
+    <div class="contacto">
+      <div>
+        <div class="marca"><span class="nombre">The Groove Experience</span><span class="by">by Groove Madrid</span></div>
+        <dl class="datos">
+          <dt>Email</dt><dd data-campo="email"></dd>
+          <dt>Teléfono</dt><dd data-campo="telefono"></dd>
+          <dt>Web</dt><dd data-campo="web"></dd>
+        </dl>
+      </div>
+      <div class="qr" id="qr">Espacio<br>para QR</div>
+    </div>
+  </div>
+</section>
+
+<script src="qrcode.js"></script>
+<script>
+(function () {
+
+  // Contacto
+  const vacios = { email: "Email · campo editable", telefono: "Teléfono · campo editable", web: "Web · campo editable" };
+  document.querySelectorAll('[data-campo]').forEach(el => {
+    const k = el.dataset.campo, v = (CONFIG.contacto[k] || "").trim();
+    if (v) el.textContent = v;
+    else { el.innerHTML = '<span class="vacio"></span>'; el.firstChild.textContent = "[" + vacios[k] + "]"; }
+  });
+
+  // Precios
+  document.querySelectorAll('[data-precio]').forEach(el => {
+    const v = CONFIG.precios[el.dataset.precio];
+    if (v !== undefined && v !== "") el.textContent = v;
+  });
+
+  // Imágenes
+  document.querySelectorAll('[data-img]').forEach(el => {
+    const c = CONFIG.imagenes[el.dataset.img];
+    if (!c || !c.src) return;
+    el.style.backgroundImage = 'url("' + encodeURI(c.src) + '")';
+    el.classList.add('has-img');
+    if (c.ref) {
+      const s = document.createElement('span');
+      s.className = 'ref'; s.textContent = 'Imagen de referencia';
+      el.appendChild(s);
+    }
+  });
+
+  // QR
+  const qr = document.getElementById('qr');
+  const k = CONFIG.contacto;
+  const texto = (k.qrTexto || "").trim() || (k.web || "").trim();
+  if ((k.qr || "").trim()) {
+    qr.innerHTML = ""; const img = new Image(); img.src = k.qr; img.alt = "QR de contacto";
+    qr.appendChild(img); qr.classList.add('lleno');
+  } else if (k.qrAuto && texto && typeof qrcode === "function") {
+    const url = /^https?:\/\//i.test(texto) || !/^www\./i.test(texto) ? texto : "https://" + texto;
+    const q = qrcode(0, 'M'); q.addData(url); q.make();
+    qr.innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+    qr.classList.add('lleno');
+  }
+})();
+</script>
+</body>
+</html>
