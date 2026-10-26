@@ -1,34 +1,38 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSesion, puede } from "@/lib/sesion";
 import { borrar, guardar } from "@/lib/crud";
-import { fFecha } from "@/lib/fechas";
-import { EST_TAREA, PRIORIDADES } from "@/lib/estados";
-import { Cabecera, Campo, Filtros, Insignia, Ocultos, Sel, Tarjeta, Vacio, boton, botonMini, campo } from "@/components/ui";
+import { fFecha, fFechaHora } from "@/lib/fechas";
+import { EST_TAREA } from "@/lib/estados";
+import { cambiosPorItem, quien, responsables, type ItemRoadmap, type LogRoadmap } from "@/lib/roadmap";
+import { Aviso, Cabecera, Filtros, Insignia, Ocultos, Sel, Tarjeta, Vacio, botonMini, campo } from "@/components/ui";
 import { Cajon } from "@/components/Cajon";
 import { Icono } from "../Icono";
+import { FormRoadmap } from "./Formulario";
 
-type R = { id: string; semana: number | null; area: string | null; objetivo: string | null; titulo: string; responsable_id: string | null; colaborador_id: string | null; depende_de_id: string | null; fecha_inicio: string | null; fecha_limite: string | null; estado: string; prioridad: string; resultado_esperado: string | null; comentarios: string | null };
+type R = ItemRoadmap;
 const TONO: Record<string, "neutro" | "olive" | "bronze" | "apagado" | "fuerte"> = { pendiente: "neutro", en_curso: "olive", bloqueado: "bronze", finalizado: "fuerte" };
 const BARRA: Record<string, string> = { pendiente: "bg-stone", en_curso: "bg-olive", bloqueado: "bg-bronze", finalizado: "bg-olive-deep" };
 const SEMANAS = Array.from({ length: 12 }, (_, i) => i + 1);
 
-export default async function Roadmap({ searchParams }: { searchParams: Promise<{ vista?: string }> }) {
+export default async function Roadmap({ searchParams }: { searchParams: Promise<{ vista?: string; error?: string }> }) {
   const s = await getSesion();
   if (!puede(s, "roadmap")) notFound();
-  const { vista = "semanas" } = await searchParams;
+  const { vista = "semanas", error } = await searchParams;
   const editar = puede(s, "roadmap", "editar");
   const supabase = await createClient();
   const [{ data }, { data: altas }, { data: perfiles }] = await Promise.all([
     supabase.from("roadmap_items").select("*").order("semana", { nullsFirst: false }).order("prioridad", { ascending: false }),
-    supabase.from("actividad_log").select("entidad_id, creado_en").eq("entidad_tipo", "roadmap").eq("accion", "insert"),
-    supabase.from("perfiles").select("id, nombre").not("rol_id", "is", null),
+    supabase.from("actividad_log").select("entidad_id, creado_en, usuario_id, accion, cambios").eq("entidad_tipo", "roadmap").in("accion", ["insert", "update"]),
+    supabase.from("perfiles").select("id, nombre").not("rol_id", "is", null).order("nombre"),
   ]);
   const items = (data ?? []) as R[];
   const nombre = new Map((perfiles ?? []).map((p) => [p.id, p.nombre]));
   const titulo = new Map(items.map((i) => [i.id, i.titulo]));
   const hechos = items.filter((i) => i.estado === "finalizado").length;
-  const registrado = new Map((altas ?? []).map((a) => [a.entidad_id, a.creado_en as string]));
+  const registrado = new Map((altas ?? []).filter((a) => a.accion === "insert").map((a) => [a.entidad_id, a.creado_en as string]));
+  const cambios = cambiosPorItem((altas ?? []).filter((a) => a.accion === "update") as LogRoadmap[], nombre);
   const hito = items.find((i) => i.area === "Hito" && i.titulo.startsWith("Inicio operativo"));
   const f = (d: string) => fFecha(d, { day: "2-digit", month: "2-digit", year: "numeric" });
   /** Fechas del trabajo: "22/10/2026" o "del 22/10/2026 al 23/10/2026" */
@@ -36,26 +40,30 @@ export default async function Roadmap({ searchParams }: { searchParams: Promise<
     ? `del ${f(i.fecha_inicio)} al ${f(i.fecha_limite)}` : i.fecha_limite || i.fecha_inicio ? f((i.fecha_limite || i.fecha_inicio)!) : null;
   const volver = `/roadmap?vista=${vista}`;
 
-  const agrupar = (clave: (i: R) => string) => {
+  /** Una acción puede ir en varios grupos (responsabilidad compartida) */
+  const agrupar = (claves: (i: R) => string[]) => {
     const m = new Map<string, R[]>();
-    for (const i of items) m.set(clave(i), [...(m.get(clave(i)) ?? []), i]);
+    for (const i of items) for (const c of claves(i)) m.set(c, [...(m.get(c) ?? []), i]);
     return [...m.entries()];
   };
-  const grupos = vista === "responsable" ? agrupar((i) => nombre.get(i.responsable_id ?? "") ?? "Sin responsable")
-    : vista === "area" ? agrupar((i) => i.area ?? "Sin área")
+  const grupos = vista === "responsable" ? agrupar((i) => {
+      const r = [i.responsable_id, i.corresponsable_id].map((id) => id && nombre.get(id)).filter((x): x is string => !!x);
+      return r.length ? r : [i.participantes?.length ? "Sin responsable individual" : "Sin responsable"];
+    })
+    : vista === "area" ? agrupar((i) => [i.area ?? "Sin área"])
     : SEMANAS.map((w) => [`Semana ${w}`, items.filter((i) => i.semana === w)] as [string, R[]]).concat([["Sin semana", items.filter((i) => !i.semana)]]).filter(([, l]) => l.length);
 
   const Fila = ({ i }: { i: R }) => (
     <li className="grid items-center gap-2 px-5 py-3 text-sm md:grid-cols-[1fr_9rem_8rem_auto]">
       <div className="min-w-0">
-        <p className="font-medium">{i.titulo}</p>
+        <Link href={`/roadmap/${i.id}`} className="font-medium hover:text-olive">{i.titulo}</Link>
         <p className="text-xs text-espresso/55">
           {[i.objetivo, i.area, i.semana && `S${i.semana}`, i.fecha_limite && `${i.estado === "finalizado" ? "realizado" : "límite"} ${fFecha(i.fecha_limite, { day: "numeric", month: "short" })}`].filter(Boolean).join(" · ")}
           {i.depende_de_id && <span className="text-bronze"> · depende de «{titulo.get(i.depende_de_id)}»</span>}
         </p>
         {i.resultado_esperado && <p className="mt-0.5 text-xs italic text-espresso/55">→ {i.resultado_esperado}</p>}
       </div>
-      <span className="text-xs text-espresso/65">{nombre.get(i.responsable_id ?? "") ?? "—"}{i.colaborador_id && ` + ${nombre.get(i.colaborador_id)}`}</span>
+      <span className="text-xs text-espresso/65">{quien(i, nombre) || "—"}</span>
       {editar ? (
         <form action={guardar} className="flex gap-1">
           <Ocultos v={{ _tabla: "roadmap_items", _id: i.id, _volver: volver }} />
@@ -72,27 +80,11 @@ export default async function Roadmap({ searchParams }: { searchParams: Promise<
       <Cabecera ante="Desarrollo" titulo="Roadmap · 12 semanas" sub={`${hechos} de ${items.length} acciones finalizadas`}>
         {puede(s, "roadmap", "crear") && (
           <Cajon boton={<><Icono n="mas" className="h-4 w-4" />Nueva acción</>} titulo="Nueva acción del roadmap">
-            <form action={guardar} className="space-y-3">
-              <Ocultos v={{ _tabla: "roadmap_items", _volver: volver }} />
-              <Campo t="Tarea"><input name="titulo" required className={campo} /></Campo>
-              <Campo t="Objetivo"><input name="objetivo" className={campo} /></Campo>
-              <div className="grid grid-cols-2 gap-3">
-                <Campo t="Semana (1-12)"><input name="semana" type="number" min="1" max="12" className={campo} /></Campo>
-                <Campo t="Área"><input name="area" list="areas" className={campo} placeholder="Comercial, Operativa…" /></Campo>
-                <Campo t="Responsable"><Sel name="responsable_id" ops={perfiles ?? []} vacio="—" /></Campo>
-                <Campo t="Colaborador"><Sel name="colaborador_id" ops={perfiles ?? []} vacio="—" /></Campo>
-                <Campo t="Inicio"><input name="fecha_inicio" type="date" className={campo} /></Campo>
-                <Campo t="Fecha límite"><input name="fecha_limite" type="date" className={campo} /></Campo>
-                <Campo t="Prioridad"><Sel name="prioridad" valor="media" ops={PRIORIDADES} /></Campo>
-                <Campo t="Depende de"><Sel name="depende_de_id" ops={items.map((i) => ({ id: i.id, nombre: i.titulo }))} vacio="—" /></Campo>
-              </div>
-              <Campo t="Resultado esperado"><input name="resultado_esperado" className={campo} /></Campo>
-              <datalist id="areas">{["Comercial", "Operativa", "Comunicación", "Producto", "Alianzas", "Finanzas"].map((a) => <option key={a} value={a} />)}</datalist>
-              <button className={`${boton} w-full`}>Añadir</button>
-            </form>
+            <FormRoadmap perfiles={perfiles ?? []} items={items.map((i) => ({ id: i.id, nombre: i.titulo }))} volver={volver} />
           </Cajon>
         )}
       </Cabecera>
+      <Aviso error={error} />
 
       {hito?.fecha_inicio && (
         <div className="tarjeta aparecer flex flex-wrap items-baseline gap-x-3 gap-y-1 border-olive/40 px-5 py-4">
@@ -115,16 +107,19 @@ export default async function Roadmap({ searchParams }: { searchParams: Promise<
                   {g.l.map((i) => (
                     <li key={i.id} className={`px-5 py-3 text-sm ${i.area === "Hito" ? "bg-olive/5" : ""}`}>
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <p className={i.area === "Hito" ? "font-serif text-base font-semibold" : "font-medium"}>{i.area === "Hito" && "◆ "}{i.titulo}</p>
+                        <Link href={`/roadmap/${i.id}`} className={`hover:text-olive ${i.area === "Hito" ? "font-serif text-base font-semibold" : "font-medium"}`}>{i.area === "Hito" && "◆ "}{i.titulo}</Link>
                         <p className="text-xs text-espresso/65">
                           {i.estado === "finalizado" ? (periodo(i) ? `Realizado ${periodo(i)}` : "Realizado") : periodo(i) ?? ""}
                           {i.estado === "bloqueado" && <Insignia tono="bronze">bloqueado</Insignia>}
                         </p>
                       </div>
                       <p className="text-xs text-espresso/55">
-                        {[nombre.get(i.responsable_id ?? ""), i.colaborador_id && nombre.get(i.colaborador_id)].filter(Boolean).join(" y ")}
+                        {quien(i, nombre)}
                         {i.comentarios && <> · {i.comentarios}</>}
                       </p>
+                      {cambios.get(i.id)?.slice(0, 3).map((c, n) => (
+                        <p key={n} className="text-[11px] text-espresso/45">{fFechaHora(c.fecha)} · {c.quien}: {c.textos.join(" · ")}</p>
+                      ))}
                       {registrado.get(i.id) && <p className="text-[11px] text-espresso/40">Registrado en la app el {f(registrado.get(i.id)!)}</p>}
                     </li>
                   ))}
@@ -146,7 +141,7 @@ export default async function Roadmap({ searchParams }: { searchParams: Promise<
                 const dur = i.fecha_inicio && i.fecha_limite ? Math.max(1, Math.ceil((new Date(i.fecha_limite).getTime() - new Date(i.fecha_inicio).getTime()) / (7 * 864e5))) : 1;
                 return (
                   <div key={i.id} className="grid grid-cols-[16rem_repeat(12,1fr)] items-center border-b border-stone/30 text-sm">
-                    <div className="truncate px-4 py-2" title={i.titulo}>{i.titulo}<span className="block text-[11px] text-espresso/50">{nombre.get(i.responsable_id ?? "") ?? ""}</span></div>
+                    <div className="truncate px-4 py-2" title={i.titulo}>{i.titulo}<span className="block text-[11px] text-espresso/50">{responsables(i, nombre)}</span></div>
                     <div className="relative col-span-12 grid h-full grid-cols-12">
                       {SEMANAS.map((w) => <div key={w} className="border-l border-stone/30" />)}
                       {i.semana && (

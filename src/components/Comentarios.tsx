@@ -3,12 +3,12 @@ import { comentar } from "@/lib/crud";
 import { fFechaHora } from "@/lib/fechas";
 import { Tarjeta, Vacio, campo, boton } from "./ui";
 
-export async function Comentarios({ tipo, id, volver }: { tipo: string; id: string; volver: string }) {
+export async function Comentarios({ tipo, id, volver, titulo = "Comentarios del equipo", escribir = true }: { tipo: string; id: string; volver: string; titulo?: string; escribir?: boolean }) {
   const supabase = await createClient();
   const { data } = await supabase.from("comentarios").select("id, texto, creado_en, perfiles(nombre)")
     .eq("entidad_tipo", tipo).eq("entidad_id", id).order("creado_en");
   return (
-    <Tarjeta titulo="Comentarios del equipo">
+    <Tarjeta titulo={titulo}>
       {data?.length ? (
         <ul className="mb-4 space-y-2">
           {data.map((c) => (
@@ -19,13 +19,13 @@ export async function Comentarios({ tipo, id, volver }: { tipo: string; id: stri
           ))}
         </ul>
       ) : <Vacio>Sin comentarios.</Vacio>}
-      <form action={comentar} className="flex gap-2">
+      {escribir && <form action={comentar} className="flex gap-2">
         <input type="hidden" name="entidad_tipo" value={tipo} />
         <input type="hidden" name="entidad_id" value={id} />
         <input type="hidden" name="_volver" value={volver} />
         <input name="texto" required placeholder="Escribe un comentario…" className={campo} />
         <button className={boton}>Enviar</button>
-      </form>
+      </form>}
     </Tarjeta>
   );
 }

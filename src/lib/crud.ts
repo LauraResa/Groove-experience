@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { madridAIso } from "@/lib/fechas";
 
-type T = "t" | "n" | "d" | "h" | "ts" | "u" | "b";
+type T = "t" | "n" | "d" | "h" | "ts" | "u" | "b" | "ua";
 
 const TABLAS: Record<string, Record<string, T>> = {
   clientes: { tipo: "t", nombre: "t", cif: "t", web: "t", sector: "t", preferencias: "t", notas: "t" },
@@ -24,7 +24,7 @@ const TABLAS: Record<string, Record<string, T>> = {
   formatos: { nombre: "t", padre_id: "u", categoria_id: "u", descripcion: "t", publico: "t", objetivo: "t", duracion: "t", aforo: "n", horario: "t", necesidades: "t", coste_estimado: "n", ingreso_potencial: "n", partners: "t", sponsors: "t", resultados: "t" },
   calendario_bloques: { tipo: "t", titulo: "t", inicio: "ts", fin: "ts", espacio_id: "u", notas: "t" },
   actividades: { lead_id: "u", tipo: "t", inicio: "ts", fin: "ts", descripcion: "t" },
-  roadmap_items: { semana: "n", area: "t", objetivo: "t", titulo: "t", responsable_id: "u", colaborador_id: "u", depende_de_id: "u", fecha_inicio: "d", fecha_limite: "d", estado: "t", prioridad: "t", resultado_esperado: "t", comentarios: "t" },
+  roadmap_items: { semana: "n", area: "t", objetivo: "t", titulo: "t", responsable_id: "u", corresponsable_id: "u", colaborador_id: "u", participantes: "ua", depende_de_id: "u", fecha_inicio: "d", fecha_limite: "d", estado: "t", prioridad: "t", resultado_esperado: "t", comentarios: "t" },
   tareas: { titulo: "t", responsable_id: "u", fecha: "d", prioridad: "t", estado: "t", notas: "t", entidad_tipo: "t", entidad_id: "u" },
   documentos: { carpeta: "t", nombre: "t", url_externa: "t" },
   documento_vinculos: { documento_id: "u", entidad_tipo: "t", entidad_id: "u" },
@@ -34,12 +34,17 @@ const TABLAS: Record<string, Record<string, T>> = {
 };
 
 function leer(f: FormData, campos: Record<string, T>) {
-  const fila: Record<string, string | number | boolean | null> = {};
+  const fila: Record<string, string | number | boolean | string[] | null> = {};
   const bools = f.getAll("_b").map(String);
   for (const [k, t] of Object.entries(campos)) {
     if (t === "b") {
       if (f.has(k)) fila[k] = true;
       else if (bools.includes(k)) fila[k] = false;
+      continue;
+    }
+    if (t === "ua") {
+      // Lista de ids (checkboxes); _a marca que el campo está en el formulario aunque no haya ninguno marcado
+      if (f.getAll("_a").map(String).includes(k)) fila[k] = f.getAll(k).map(String).filter(Boolean);
       continue;
     }
     if (!f.has(k)) continue;
