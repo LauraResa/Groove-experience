@@ -72,17 +72,17 @@ export default async function Leads({ searchParams }: { searchParams: Promise<{ 
         { v: "sin_accion", t: "Sin próxima acción", n: cuenta("sin_accion") },
       ]} />
 
-      <div className="grid items-start gap-3 grid-cols-[repeat(auto-fill,minmax(15rem,1fr))]">
+      <div className="space-y-3">
         {(estados ?? []).map((e) => {
           const col = visibles.filter((l) => l.estado_id === e.id);
           const total = col.reduce((t, l) => t + Number(l.presupuesto_estimado ?? 0), 0);
           return (
-            <section key={e.id} className="aparecer min-w-0 rounded-2xl bg-stone/25 border border-stone/40 p-3 space-y-2" style={{ animationDelay: `${(e.orden ?? 0) * 40}ms` }}>
+            <section key={e.id} className="aparecer rounded-2xl bg-stone/25 border border-stone/40 p-3 space-y-2" style={{ animationDelay: `${(e.orden ?? 0) * 40}ms` }}>
               <div className="flex justify-between text-xs font-medium px-1">
                 <span>{e.nombre}</span>
                 <span className="text-espresso/60">{col.length}{importes && total > 0 ? ` · ${eur(total)}` : ""}</span>
               </div>
-              {col.map((l) => {
+              {col.length > 0 && <div className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">{col.map((l) => {
                 const cliente = l.clientes as unknown as { nombre: string } | null;
                 const resp = l.perfiles as unknown as { nombre: string } | null;
                 return (
@@ -111,7 +111,7 @@ export default async function Leads({ searchParams }: { searchParams: Promise<{ 
                     )}
                   </article>
                 );
-              })}
+              })}</div>}
             </section>
           );
         })}
