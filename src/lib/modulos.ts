@@ -7,6 +7,7 @@ export const MODULOS = [
   { slug: "clientes", modulo: "clientes", area: "Comercial", nombre: "Clientes" },
   { slug: "proveedores", modulo: "proveedores", area: "Producción", nombre: "Proveedores" },
   { slug: "formatos", modulo: "formatos", area: "Desarrollo", nombre: "Formatos propios" },
+  { slug: "inventario", modulo: "inventario", area: "Producción", nombre: "Inventario" },
   { slug: "calendario", modulo: "calendario", area: "Producción", nombre: "Calendario" },
   { slug: "roadmap", modulo: "roadmap", area: "Desarrollo", nombre: "Roadmap" },
   { slug: "tareas", modulo: "tareas", area: "Mi día", nombre: "Tareas" },
